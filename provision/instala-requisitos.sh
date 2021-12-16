@@ -11,4 +11,7 @@ sudo apt-get install make build-essential libssl-dev zlib1g-dev \
              libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
 	     ${APT_OPTIONS}
 
+sudo apt-get install git ${APT_OPTIONS}
+
+
 

@@ -33,6 +33,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     srv.vm.box = "ubuntu/focal64"
 
     srv.vm.network :private_network, ip: HOST_IP_ADDRESS
+    srv.vm.synced_folder ".", "/vagrant", id: "vagrant", :mount_options => ["uid=1000","gid=1000","dmode=777", "fmode=666"]
 
     srv.vm.box_check_update = false
     srv.ssh.forward_agent = true
