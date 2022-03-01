@@ -126,8 +126,11 @@ blacklist {
         SHELL
     end
 
-    config.vm.provision "instala_requisitos",   type: :shell, path: "provision/instala-requisitos.sh", privileged: false
-    config.vm.provision "instala_python_tools", type: :shell, path: "provision/instala-python-tools.sh", privileged: false
+    config.vm.provision "instala_requisitos",      type: :shell, path: "provision/instala-requisitos.sh", privileged: false
+    config.vm.provision "instala_python_tools",    type: :shell, path: "provision/instala-python-tools.sh", privileged: false
+    config.vm.provision "configura_proyecto",      type: :shell, path: "provision/configura-proyecto.sh", privileged: false
+    config.vm.provision "configura_python_vscode", type: :shell, path: "provision/configura-python-en-vscode.sh", privileged: false
+    config.vm.provision "actualiza_sistema",       type: :shell, path: "provision/actualiza-sistema.sh", privileged: false, run: "never"
 
     config.vm.provision :reload
 
