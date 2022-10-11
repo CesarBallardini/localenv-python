@@ -47,7 +47,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
  config.vm.define HOSTNAME do |srv|
 
-    srv.vm.box = "ubuntu/focal64"
+    srv.vm.box = "ubuntu/jammy64"
 
     srv.vm.network :private_network, ip: HOST_IP_ADDRESS
 
@@ -126,11 +126,11 @@ blacklist {
         SHELL
     end
 
-    config.vm.provision "instala_requisitos",      type: :shell, path: "provision/instala-requisitos.sh", privileged: false
-    config.vm.provision "instala_python_tools",    type: :shell, path: "provision/instala-python-tools.sh", privileged: false
-    config.vm.provision "configura_proyecto",      type: :shell, path: "provision/configura-proyecto.sh", privileged: false
-    config.vm.provision "configura_python_vscode", type: :shell, path: "provision/configura-python-en-vscode.sh", privileged: false
-    config.vm.provision "actualiza_sistema",       type: :shell, path: "provision/actualiza-sistema.sh", privileged: false, run: "never"
+    config.vm.provision "1_instala_requisitos",      type: :shell, path: "provision/1-instala-requisitos.sh", privileged: false
+    config.vm.provision "2_instala_python_tools",    type: :shell, path: "provision/2-instala-python-tools.sh", privileged: false
+    config.vm.provision "3_configura_proyecto",      type: :shell, path: "provision/3-configura-proyecto.sh", privileged: false
+    config.vm.provision "4_configura_python_vscode", type: :shell, path: "provision/4-configura-python-en-vscode.sh", privileged: false
+    config.vm.provision "actualiza_sistema",         type: :shell, path: "provision/actualiza-sistema.sh", privileged: false, run: "never"
 
     config.vm.provision :reload
 

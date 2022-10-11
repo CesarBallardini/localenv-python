@@ -135,12 +135,12 @@ config_pre_commit() {
   rm -f .pre-commit-config.yaml
   cat | tee -a .pre-commit-config.yaml <<'EOF'
 repos:
--   repo: https://github.com/ambv/black
-    rev: "22.1.0"
-    hooks:
-    - id: black
-      language_version: python3.10.2
-      stages: [commit]
+#-   repo: https://github.com/ambv/black
+#    rev: "22.1.0"
+#    hooks:
+#    - id: black
+#      language_version: python3.10.2
+#      stages: [commit]
 -   repo: https://gitlab.com/pycqa/flake8
     rev: "3.9.2"
     hooks:
@@ -159,7 +159,7 @@ repos:
     hooks:
       - id: requirements
         name: requirements
-        entry: bash -c 'venv/bin/pip3 freeze > requirements.txt; git add requirements.txt'
+        entry: bash -c 'venv/bin/pip3 freeze --all > requirements.txt; git add requirements.txt'
         language: system
         pass_filenames: false
         stages: [commit]
