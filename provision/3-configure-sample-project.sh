@@ -3,8 +3,9 @@ export DEBIAN_FRONTEND=noninteractive
 export APT_LISTCHANGES_FRONTEND=none
 export APT_OPTIONS=' -y --allow-downgrades --allow-remove-essential --allow-change-held-packages -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold '
 
-export PROJECT_DIR=/vagrant/proyecto
-export MY_PYTHON_VERSION=3.10.2
+# args:
+export MY_PYTHON_VERSION=${1:-3.10.2}
+export PROJECT_DIR=${2:-/vagrant/my-sample-project}
 
 
 make_project_dir() {
@@ -21,6 +22,10 @@ config_gitignore() {
 .mypy_cache/
 .pytest_cache/
 venv/
+.coverage
+coverage.xml
+htmlcov/
+
 EOF
 
 }
@@ -44,7 +49,7 @@ create_virtualenv() {
 }
 
 
-crea_requirements_dev() {
+make_requirements_dev() {
 
   rm -f requirements-dev.txt
   cat | tee -a requirements-dev.txt <<'EOF'
@@ -65,7 +70,7 @@ EOF
 }
 
 
-crea_requirements_test() {
+make_requirements_test() {
 
   rm -f requirements-test.txt
   cat | tee -a requirements-test.txt <<'EOF'
@@ -80,7 +85,7 @@ EOF
 }
 
 
-crea_requirements_prod() {
+make_requirements_prod() {
 
   rm -f requirements-prod.txt
   cat | tee -a requirements-prod.txt <<'EOF'
@@ -166,29 +171,11 @@ repos:
 
 EOF
 
+
+  pre-commit validate-config
   pre-commit install
   pre-commit autoupdate
-}
-
-
-make_sample_code() {
-
-  mkdir -p src/domain/tests
-
-  echo '# noqa: D104 # Missing docstring in public package' > src/__init__.py
-  echo '# noqa: D104 # Missing docstring in public package' > src/domain/__init__.py
-  echo '# noqa: D104 # Missing docstring in public package' > src/domain/tests/__init__.py
-
-  rm -f src/domain/tests/test_ok.py
-  cat | tee -a src/domain/tests/test_ok.py <<'EOF'
-"""Trivial test file."""
-
-
-def test_ok() -> None:
-    """Trivial test function."""
-    assert True
-EOF
-
+  pre-commit validate-manifest
 }
 
 
@@ -313,17 +300,6 @@ EOF
 ##
 # main
 #
-# [instalar requisitos en visual studio code](configura-python-en-vscode.md)
-#
-# FIXME: los siguientes para que son?
-# pip install tox
-# pip install pytest-benchmark
-# pip install mkdocs
-# pip install mkdocstrings
-# pip install mkdocs-material
-# pip install Pygments
-# pip install pdoc3
-
 
 make_project_dir
 config_gitignore
@@ -333,9 +309,9 @@ create_virtualenv
 source venv/bin/activate
 
 # environment dependencies
-crea_requirements_dev
-crea_requirements_test
-crea_requirements_prod
+make_requirements_dev
+make_requirements_test
+make_requirements_prod
 venv/bin/pip install -r requirements-dev.txt
 #venv/bin/pip install -r requirements-test.txt
 #venv/bin/pip install -r requirements-prod.txt
@@ -345,14 +321,4 @@ config_flake8
 config_pre_commit
 config_pytest
 config_mypy
-
-
-# make a test and run the QA utilities
-
-make_sample_code # pytest fails at commit time if no tests available
-
-pytest -svv --cov=src/ --cov-report=term-missing --cov-report=html
-#codecov --dump  # requires a commit in the repo
-#pydocstyle --convention=google --add-ignore=D208,D212,D214 src/
-pydocstyle --convention=google src/
 

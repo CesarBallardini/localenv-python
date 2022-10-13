@@ -1,4 +1,4 @@
-tmp/
 .vagrant/
+my-sample-project/
+tmp/
 Vagrantfile
-proyecto/

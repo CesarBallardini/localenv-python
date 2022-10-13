@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-export PROJECT_DIR=/vagrant/proyecto
+
+# args:
+export PROJECT_DIR=${2:-/vagrant/my-sample-project}
+
 
 cd "${PROJECT_DIR}"
-
 
 ##
 # instala extensiones necesarias

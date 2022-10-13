@@ -14,7 +14,7 @@ sudo apt-get install make build-essential libssl-dev zlib1g-dev zip \
 
 sudo apt-get install git mc vim tree screen ${APT_OPTIONS}
 
-
+# install vscode
 sudo apt-get install software-properties-common apt-transport-https wget ${APT_OPTIONS}
 wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main"

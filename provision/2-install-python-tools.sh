@@ -3,7 +3,8 @@ export DEBIAN_FRONTEND=noninteractive
 export APT_LISTCHANGES_FRONTEND=none
 export APT_OPTIONS=' -y --allow-downgrades --allow-remove-essential --allow-change-held-packages -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold '
 
-export MY_PYTHON_VERSION=3.10.2
+# args:
+export MY_PYTHON_VERSION=${1:-3.10.2}
 
 
 install_python_version_with_pyenv() {
