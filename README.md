@@ -47,6 +47,35 @@ And you can destroy it:
 vagrant destroy -f
 ```
 
+## Use the local Python environment
+
+The provisioning creates a directory to hold an example project: `my-sample-project`.  In the `Vagrantfile`
+you have the following variables in case you want to customize some aspects of the environment:
+
+
+* `PROJECT_DIR="/vagrant/my-sample-project"`
+* `MY_PYTHON_VERSION="3.10.2"`
+
+
+So you can change to the project directory:
+
+```bash
+cd /vagrant/my-sample-project/
+```
+
+Activate the virtual environment:
+
+```bash
+source venv/bin/activate
+```
+
+and then you can run tests, code linting and formatting, etc.
+
+Just to see some of this tools in action, you can run:
+
+```bash
+/vagrant/provision/5-run-style-tools.sh
+```
 
 
 # Requirements
