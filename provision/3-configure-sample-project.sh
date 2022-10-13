@@ -9,7 +9,8 @@ export PROJECT_DIR=${2:-/vagrant/my-sample-project}
 
 
 make_project_dir() {
-  mkdir "${PROJECT_DIR}"
+  sudo mkdir "${PROJECT_DIR}"
+  sudo chown $(id --name --user):$(id --name --group) "${PROJECT_DIR}"
   cd "${PROJECT_DIR}"
 }
 
@@ -31,6 +32,7 @@ EOF
 }
 
 initialize_git_repo() {
+  git config --global init.defaultBranch master
   git init
 }
 
