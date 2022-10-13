@@ -4,7 +4,7 @@ Python version is managed with Pyenv, and a virtual environment is created to ma
 
 # How to use this repository
 
-* Make sure of the requirements are installed.
+* Make sure that the requirements are installed.
 
 * make a clone of repo:
 
@@ -22,7 +22,7 @@ You can customize the values if you like.  If you let the default values, it wil
 cd localenv-python/
 cp Vagrantfile.virtualbox Vagrantfile ; time vagrant up  # uses Virtualbox as provider
 
-# o bien
+# or, if you want to use Docker instead of Virtualbox
 cp Vagrantfile.docker Vagrantfile ;  time vagrant up  # uses Docker as provider, ie. on Apple MAC with M1 processor
 
 ```
