@@ -22,8 +22,9 @@ You can customize the values if you like.  If you let the default values, it wil
 cd localenv-python/
 cp Vagrantfile.virtualbox Vagrantfile ; time vagrant up  # uses Virtualbox as provider
 
-# or, if you want to use Docker instead of Virtualbox
-cp Vagrantfile.docker Vagrantfile ;  time vagrant up  # uses Docker as provider, ie. on Apple MAC with M1 processor
+# or, if you want to use Docker instead of Virtualbox, (ie. on Apple MAC with M1 processor), you choose the synced folder type:
+cp Vagrantfile.docker.volume Vagrantfile ;  time vagrant up  # uses Docker volume as synced folder, recomended
+#cp Vagrantfile.docker.rsync Vagrantfile ;  time vagrant up  # uses rsync a as synced folder
 
 ```
 

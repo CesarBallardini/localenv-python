@@ -1,7 +1,12 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# Vagrantfile.docker.volume
+# /vagrant synced_folder is a Docker volume
+
 VAGRANTFILE_API_VERSION = "2"
+ENV['VAGRANT_NO_PARALLEL'] = 'yes'
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'docker'
 
 HOSTNAME = "pydev"
 HOST_IP_ADDRESS="192.168.56.10"
@@ -9,7 +14,10 @@ DOMAIN="virtual.ballardini.com.ar"
 
 MY_PYTHON_VERSION="3.10.2"
 PROJECT_DIR="/vagrant/my-sample-project"
+# the project folder will be owned by uid/gid 1000 (those ids belongs to vagrant in the guest)
 
+# Or you can use the vagrant user HOME directory:
+#PROJECT_DIR="/home/vagrant/my-sample-project"
 
 
 $msg = <<MSG
@@ -23,6 +31,8 @@ MSG
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
+  ENV['VAGRANT_DEFAULT_PROVIDER'] = 'docker'
+
   if Vagrant.has_plugin?("vagrant-hostmanager")
     config.hostmanager.enabled = true
     config.hostmanager.manage_host = true
@@ -35,15 +45,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
  config.vm.define HOSTNAME do |srv|
 
-    srv.vm.box = "ubuntu/jammy64"
-
     srv.vm.network :private_network, ip: HOST_IP_ADDRESS
-    srv.vm.synced_folder ".", "/vagrant", id: "vagrant", :mount_options => ["uid=1000","gid=1000","dmode=777", "fmode=666"]
+    srv.vm.synced_folder ".", "/vagrant", id: "vagrant", :mount_options => ["dmode=775", "fmode=666"]
 
     srv.vm.box_check_update = false
     srv.ssh.forward_agent = true
     srv.ssh.forward_x11 = true
     srv.vm.hostname = HOSTNAME
+    srv.vm.boot_timeout = 600
 
     if Vagrant.has_plugin?("vagrant-hostmanager")
       srv.hostmanager.aliases = %W(#{HOSTNAME+"."+DOMAIN})
@@ -54,9 +63,14 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       override.vm.box = nil
       docker.image = "rofrano/vagrant-provider:ubuntu"
       docker.remains_running = true
+      override.ssh.insert_key = true
       docker.has_ssh = true
       docker.privileged = true
-      docker.volumes = ["/sys/fs/cgroup:/sys/fs/cgroup:ro"]
+      docker.volumes = ["/sys/fs/cgroup:/sys/fs/cgroup" ]
+      docker.create_args = ["--cgroupns=host", "--tmpfs=/run", "--tmpfs=/run/lock" ]
+
+      # Uncomment to force arm64 for testing images
+      #docker.create_args = ['--platform=linux/arm64']
     end
   end
 
@@ -65,7 +79,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     #
     config.vm.provision "fix-no-tty", type: "shell" do |s|  # http://foo-o-rama.com/vagrant--stdin-is-not-a-tty--fix.html
         s.privileged = false
-        s.inline = "sudo sed -i '/tty/!s/mesg n/tty -s \\&\\& mesg n/' /root/.profile"
+        s.inline = "sudo sed -i '/tty/!s/mesg n/tty -s \\&\\& mesg n/' /root/.profile\n"
     end
     config.vm.provision "ssh_pub_key", type: :shell do |s|
       begin
@@ -89,9 +103,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           export APT_LISTCHANGES_FRONTEND=none
           export APT_OPTIONS=' -y --allow-downgrades --allow-remove-essential --allow-change-held-packages -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold '
 
-          sudo -E apt-get --purge remove apt-listchanges -y > /dev/null 2>&1
           sudo -E apt-get update -y -qq > /dev/null 2>&1
-          sudo dpkg-reconfigure --frontend=noninteractive libc6 > /dev/null 2>&1
+          sudo -E apt-get install apt-utils ${APT_OPTIONS} > /dev/null 2>&1
+          sudo -E apt-get install debconf-utils ${APT_OPTIONS} > /dev/null 2>&1
+
+          echo 'tzdata tzdata/Areas select America' | sudo -E debconf-set-selections
+          echo 'tzdata tzdata/Zones/America select Argentina/Buenos_Aires' | sudo -E debconf-set-selections
+          sudo -E rm -f /etc/timezone /etc/localtime
+          sudo -E apt-get install tzdata ${APT_OPTIONS} > /dev/null 2>&1
+
+          sudo -E apt-get --purge remove apt-listchanges -y > /dev/null 2>&1
           [ $( lsb_release -is ) != "Debian" ] && sudo -E apt-get install linux-image-generic ${APT_OPTIONS}
           sudo -E apt-get upgrade ${APT_OPTIONS} > /dev/null 2>&1
           sudo -E apt-get dist-upgrade ${APT_OPTIONS} > /dev/null 2>&1
