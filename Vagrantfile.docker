@@ -7,6 +7,11 @@ HOSTNAME = "pydev"
 HOST_IP_ADDRESS="192.168.56.10"
 DOMAIN="virtual.ballardini.com.ar"
 
+MY_PYTHON_VERSION="3.10.2"
+PROJECT_DIR="/vagrant/my-sample-project"
+
+
+
 $msg = <<MSG
 ------------------------------------------------------
 Python local dev environment
@@ -56,7 +61,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
     ##
-    # Aprovisionamiento
+    # Provisioning
     #
     config.vm.provision "fix-no-tty", type: "shell" do |s|  # http://foo-o-rama.com/vagrant--stdin-is-not-a-tty--fix.html
         s.privileged = false
@@ -72,12 +77,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             echo #{ssh_pub_key} >> /root/.ssh/authorized_keys
           SHELL
       rescue
-          puts "No hay claves publicas en el HOME de su pc"
-          s.inline = "echo OK sin claves publicas"
+          puts "No public keys availables on host HOME"
+          s.inline = "echo OK no public keys available"
       end
     end
 
-    config.vm.provision "actualiza", type: "shell" do |s|
+    config.vm.provision "update", type: "shell" do |s|
         s.privileged = false
         s.inline = <<-SHELL
           export DEBIAN_FRONTEND=noninteractive
@@ -97,11 +102,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         SHELL
     end
 
-    config.vm.provision "1_instala_requisitos",      type: :shell, path: "provision/1-instala-requisitos.sh", privileged: false
-    config.vm.provision "2_instala_python_tools",    type: :shell, path: "provision/2-instala-python-tools.sh", privileged: false
-    config.vm.provision "3_configura_proyecto",      type: :shell, path: "provision/3-configura-proyecto.sh", privileged: false
-    config.vm.provision "4_configura_python_vscode", type: :shell, path: "provision/4-configura-python-en-vscode.sh", privileged: false
-    config.vm.provision "actualiza_sistema",         type: :shell, path: "provision/actualiza-sistema.sh", privileged: false, run: "never"
+    config.vm.provision "1_install_requirements",    type: :shell, path: "provision/1-install-requirements.sh", privileged: false
+    config.vm.provision "2_install_python_tools",    type: :shell, path: "provision/2-install-python-tools.sh", privileged: false, args: [ MY_PYTHON_VERSION ]
+    config.vm.provision "3_configure_sample_project",type: :shell, path: "provision/3-configure-sample-project.sh", privileged: false, args: [ MY_PYTHON_VERSION, PROJECT_DIR ]
+    config.vm.provision "4_configure_python_vscode", type: :shell, path: "provision/4-configure-python-vscode.sh", privileged: false, args: [ PROJECT_DIR ]
+    config.vm.provision "5_run_style_tools",         type: :shell, path: "provision/5-run-style-tools.sh", privileged: false, keep_color: true, args: [ MY_PYTHON_VERSION, PROJECT_DIR ]
+    config.vm.provision "system_upgrade",            type: :shell, path: "provision/system-upgrade.sh", privileged: false, run: "never"
 
     config.vm.provision :reload
 
