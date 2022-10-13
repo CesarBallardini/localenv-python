@@ -100,8 +100,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           export APT_LISTCHANGES_FRONTEND=none
           export APT_OPTIONS=' -y --allow-downgrades --allow-remove-essential --allow-change-held-packages -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold '
 
-          sudo -E apt-get --purge remove apt-listchanges -y > /dev/null 2>&1
           sudo -E apt-get update -y -qq > /dev/null 2>&1
+          sudo -E apt-get install apt-utils ${APT_OPTIONS} > /dev/null 2>&1
+          sudo -E apt-get install debconf-utils ${APT_OPTIONS} > /dev/null 2>&1
+
+          echo 'tzdata tzdata/Areas select America' | sudo -E debconf-set-selections
+          echo 'tzdata tzdata/Zones/America select Argentina/Buenos_Aires' | sudo -E debconf-set-selections
+          sudo -E rm -f /etc/timezone /etc/localtime
+          sudo -E apt-get install tzdata ${APT_OPTIONS} > /dev/null 2>&1
+
+          sudo -E apt-get --purge remove apt-listchanges -y > /dev/null 2>&1
           sudo dpkg-reconfigure --frontend=noninteractive libc6 > /dev/null 2>&1
           [ $( lsb_release -is ) != "Debian" ] && sudo -E apt-get install linux-image-generic ${APT_OPTIONS}
           sudo -E apt-get upgrade ${APT_OPTIONS} > /dev/null 2>&1
