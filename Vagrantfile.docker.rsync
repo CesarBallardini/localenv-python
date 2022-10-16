@@ -26,6 +26,16 @@ Python local dev environment
 ------------------------------------------------------
 MSG
 
+# Activate X-11 display of process running in the container
+require 'fileutils'
+DISPLAY = ENV['DISPLAY']
+XSOCK="/tmp/.X11-unix"
+XAUTH="/tmp/.docker.xauth"
+FileUtils.touch(XAUTH)
+system("xauth nlist #{DISPLAY} | sed -e 's/^..../ffff/' | xauth -f #{XAUTH} nmerge -")
+system("sudo chmod o+rw #{XAUTH}")
+
+
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   ENV['VAGRANT_DEFAULT_PROVIDER'] = 'docker'
@@ -64,7 +74,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       docker.has_ssh = true
       docker.privileged = true
       docker.volumes = ["/sys/fs/cgroup:/sys/fs/cgroup" ]
-      docker.create_args = ["--cgroupns=host", "--tmpfs=/run", "--tmpfs=/run/lock" ]
+      docker.create_args = ["--cgroupns=host", 
+                            "--tmpfs=/run", 
+                            "--tmpfs=/run/lock", 
+                            "--volume=#{XAUTH}:#{XAUTH}:rw",
+                            "--volume=#{XSOCK}:#{XSOCK}:rw",  
+                            "--env", "XAUTHORITY=#{XAUTH}",
+                            "--env", "DISPLAY=#{DISPLAY}"  ]
 
       # Uncomment to force arm64 for testing images
       #docker.create_args = ['--platform=linux/arm64']
@@ -100,6 +116,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           export APT_LISTCHANGES_FRONTEND=none
           export APT_OPTIONS=' -y --allow-downgrades --allow-remove-essential --allow-change-held-packages -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold '
 
+          # to give access to uid=1000 vagrant inside guest to file in host
+          sudo -E chmod a+r #{XAUTH}
+
           sudo -E apt-get update -y -qq > /dev/null 2>&1
           sudo -E apt-get install apt-utils ${APT_OPTIONS} > /dev/null 2>&1
           sudo -E apt-get install debconf-utils ${APT_OPTIONS} > /dev/null 2>&1
@@ -120,9 +139,29 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         SHELL
     end
 
+    config.vm.provision "xauth", type: :shell do |s|
+        s.privileged = false
+        s.inline = <<-SHELL
+          export DEBIAN_FRONTEND=noninteractive
+          export APT_LISTCHANGES_FRONTEND=none
+          export APT_OPTIONS=' -y --allow-downgrades --allow-remove-essential --allow-change-held-packages -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold '
+
+          sudo apt-get install socat ${APT_OPTIONS} > /dev/null 2>&1
+
+          echo -e "export DISPLAY=#{DISPLAY}\nexport XAUTHORITY=#{XAUTH}" > /etc/profile.d/xauth.sh
+
+          sudo sed -i 's/^[#]*X11UseLocalhost.*/X11UseLocalhost no/' /etc/ssh/sshd_config
+          sudo sed -i 's/^[#]*X11DisplayOffset.*/X11DisplayOffset 10/' /etc/ssh/sshd_config
+          sudo sed -i 's/^[#]*X11Forwarding.*/X11Forwarding yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/^[#]*PermitUserEnvironment.*/PermitUserEnvironment yes/' /etc/ssh/sshd_config
+          sudo service sshd restart
+
+        SHELL
+    end
+
     config.vm.provision "1_install_requirements",    type: :shell, path: "provision/1-install-requirements.sh", privileged: false
     config.vm.provision "2_install_python_tools",    type: :shell, path: "provision/2-install-python-tools.sh", privileged: false, args: [ MY_PYTHON_VERSION ]
-    config.vm.provision "3_configure_sample_project",type: :shell, path: "provision/3-configure-sample-project.sh", privileged: false, args: [ MY_PYTHON_VERSION, PROJECT_DIR ]
+    config.vm.provision "3_configure_sample_project",type: :shell, path: "provision/3-configure-sample-project.sh", privileged: false, args: [ MY_PYTHON_VERSION, PROJECT_DIR, CHOWN_PROJECT_DIR ]
     config.vm.provision "4_configure_python_vscode", type: :shell, path: "provision/4-configure-python-vscode.sh", privileged: false, args: [ PROJECT_DIR ]
     config.vm.provision "5_run_style_tools",         type: :shell, path: "provision/5-run-style-tools.sh", privileged: false, keep_color: true, args: [ MY_PYTHON_VERSION, PROJECT_DIR ]
     config.vm.provision "system_upgrade",            type: :shell, path: "provision/system-upgrade.sh", privileged: false, run: "never"
