@@ -15,6 +15,7 @@ DOMAIN="virtual.ballardini.com.ar"
 
 MY_PYTHON_VERSION="3.10.2"
 PROJECT_DIR="/vagrant/my-sample-project"
+CHOWN_PROJECT_DIR="no"
 
 
 $msg = <<MSG
