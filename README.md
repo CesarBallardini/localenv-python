@@ -24,7 +24,6 @@ cp Vagrantfile.virtualbox Vagrantfile ; time vagrant up  # uses Virtualbox as pr
 
 # or, if you want to use Docker instead of Virtualbox, (ie. on Apple MAC with M1 processor), you choose the synced folder type:
 cp Vagrantfile.docker.volume Vagrantfile ;  time vagrant up  # uses Docker volume as synced folder, recomended
-#cp Vagrantfile.docker.rsync Vagrantfile ;  time vagrant up  # uses rsync a as synced folder
 
 ```
 
@@ -119,7 +118,6 @@ Where `/tmp/.X11-unix` is the value of `XSOCK` variable in `Vagrantile`
 * Virtualbox (checked with version 6.1.28r147628) o Docker (checked with version 19.03.12, build 48a66213fe) as provider.
 
 * Git (checked with version 2.25.1)
-
 
 
 # References
