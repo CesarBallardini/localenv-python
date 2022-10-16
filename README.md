@@ -28,7 +28,8 @@ cp Vagrantfile.docker.volume Vagrantfile ;  time vagrant up  # uses Docker volum
 
 ```
 
-The `vagrant up` command creates an Ubuntu 22.04 node called `pydev`.  The network is _host only_, so you can access it from the host (PC or laptop).
+The `vagrant up` command creates an Ubuntu 22.04 node called `pydev`.
+The network is _host only_, so you can access it from the host (PC or laptop).
 
 You can access with SSH:
 
@@ -77,7 +78,31 @@ Just to see some of this tools in action, you can run:
 ```bash
 /vagrant/provision/5-run-style-tools.sh
 ```
+## Using vscode inside the Docker container
 
+You will need `socat` program installed on the host, if you want to use X GUI programs
+running on the Docker container and displayed on the host screen.
+You won't need socat with the Virtualbox VM version.
+
+The container need access to the socket where X server accepts connections.
+
+With old/traditional filesystem sockets in the host, the commands that run at container launching time
+(`vagrant up`) will be enough to get GUI programs inside the container displayed on the X server in the host.
+
+In modern systems the sockets are [_abstract unix sockets_](https://manpages.debian.org/bullseye/manpages/unix.7.en.html#Abstract_sockets). You
+need to proxy between the abstract socket and the traditional socket, so the container can access the traditional one.
+
+We can use `socat` to do the proxy thing, so you need to install it on your host machine.  The `socat` was already provisioned on the container.
+
+When you need to run GUI programs inside the container (i.e. vscode) you need to open another terminal in the host and run:
+
+```bash
+socat unix-listen:/tmp/.X11-unix/X0,umask=000,fork abstract-connect:/tmp/.X11-unix/X0
+```
+
+Where `/tmp/.X11-unix` is the value of `XSOCK` variable in `Vagrantile`
+
+* Reference: https://unix.stackexchange.com/questions/716838/find-my-display-socket
 
 # Requirements
 

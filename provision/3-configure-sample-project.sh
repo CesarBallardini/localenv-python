@@ -6,12 +6,36 @@ export APT_OPTIONS=' -y --allow-downgrades --allow-remove-essential --allow-chan
 # args:
 export MY_PYTHON_VERSION=${1:-3.10.2}
 export PROJECT_DIR=${2:-/vagrant/my-sample-project}
+export CHOWN_PROJECT_DIR=${3:-no}
 
 
-make_project_dir() {
+force_change_ownership_project_dir() {
   sudo mkdir "${PROJECT_DIR}"
   sudo chown $(id --name --user):$(id --name --group) "${PROJECT_DIR}"
   cd "${PROJECT_DIR}"
+}
+
+
+do_not_force_change_ownership_project_dir() {
+  mkdir "${PROJECT_DIR}"
+  cd "${PROJECT_DIR}"
+}
+
+
+make_project_dir() {
+
+  if [ "${CHOWN_PROJECT_DIR}" = "yes" ]
+  then
+    force_change_ownership_project_dir
+  else
+     if  [ "${CHOWN_PROJECT_DIR}" = "no" ]
+     then
+       do_not_force_change_ownership_project_dir
+     else
+	echo "CHOWN_PROJECT_DIR value not in yes/no, [${CHOWN_PROJECT_DIR}]"
+	exit 1
+     fi
+  fi
 }
 
 
@@ -60,6 +84,7 @@ make_requirements_dev() {
 pip
 wheel
 pylint
+pylint-quotes
 black
 autopep8
 flake8

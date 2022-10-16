@@ -70,7 +70,7 @@ run_qa_tools() {
   echo '****************************************************'
   echo '****** run pylint **********************************'
   echo '****************************************************'
-  pylint --output-format=colorized src/
+  pylint --load-plugins pylint_quotes --output-format=colorized src/
   echo "retcode="$?
 
   echo -e '\n\n'
