@@ -1,5 +1,9 @@
 # README - localenv-python
 
+[![check](https://github.com/CesarBallardini/localenv-python/actions/workflows/check.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/check.yml)
+[![pytest](https://github.com/CesarBallardini/localenv-python/actions/workflows/pytest.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/pytest.yml)
+[![security](https://github.com/CesarBallardini/localenv-python/actions/workflows/security.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/security.yml)
+
 Tooling scaffold for a Python backend: linting, type checking, tests organized by kind, and security, all wired up from the first commit — so "it's clean" is what happens by default, not something someone has to remember to run by hand.
 
 This is the companion repo for the post [El tooling de un backend Python en serio, antes de escribir la primera ruta](https://katra.ballardini.com.ar/posts/python-tooling-backend-desde-cero/) — everything here is generic and reusable, not any client's code.
@@ -13,7 +17,7 @@ This is the companion repo for the post [El tooling de un backend Python en seri
 * **[pytest](https://docs.pytest.org/)** with tests split by kind: `unit/`, `integration/`, `acceptance/` (BDD via [pytest-bdd](https://pytest-bdd.readthedocs.io/)), `e2e/` (via [pytest-playwright](https://playwright.dev/python/docs/test-runners)).
 * **[pre-commit](https://pre-commit.com/)** hooking lint, format, and lockfile checks before every commit.
 * A `Makefile` as the single interface — nobody needs to memorize the exact command for each tool.
-* A GitHub Actions workflow (`.github/workflows/ci.yml`) with jobs split by responsibility: `check` (lint + format + types), `pytest` (with Postgres and Redis service containers), `security` (bandit + pip-audit).
+* Three independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (lint + format + types), `pytest.yml` (with Postgres and Redis service containers), `security.yml` (bandit + pip-audit).
 
 # Prerequisites
 
