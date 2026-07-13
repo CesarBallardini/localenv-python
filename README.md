@@ -13,17 +13,18 @@ This is the companion repo for the post [El tooling de un backend Python en seri
 * **[uv](https://docs.astral.sh/uv/)** for dependency and environment management, with separate groups (`dev` vs `deploy`).
 * **[ruff](https://docs.astral.sh/ruff/)** as linter and formatter (`ruff.toml`).
 * **[pyright](https://microsoft.github.io/pyright/)** + **[pyrefly](https://pyrefly.org/)** as a pair of type checkers, run on purpose, not mid-migration (`pyrightconfig.json`, `pyrefly.toml`).
-* **[bandit](https://bandit.readthedocs.io/)** (SAST) with a baseline, and **[pip-audit](https://pypi.org/project/pip-audit/)** (SCA) for security (`bandit.yaml`).
+* **[bandit](https://bandit.readthedocs.io/)** (SAST) with a baseline, and **[pip-audit](https://pypi.org/project/pip-audit/)** + **[OSV-Scanner](https://google.github.io/osv-scanner/)** (SCA) against `uv.lock` for security (`bandit.yaml`). OSV-Scanner is a standalone Go binary, not a PyPI package, so it doesn't go through `uv` — locally it just needs to be on `PATH` (`choco install osv-scanner` on Windows), in CI it runs via Google's official reusable workflow (see `security.yml`).
 * **[pytest](https://docs.pytest.org/)** with tests split by kind: `unit/`, `integration/`, `acceptance/` (BDD via [pytest-bdd](https://pytest-bdd.readthedocs.io/)), `e2e/` (via [pytest-playwright](https://playwright.dev/python/docs/test-runners)).
 * **[pre-commit](https://pre-commit.com/)** hooking lint, format, and lockfile checks before every commit.
 * A `Makefile` as the single interface — nobody needs to memorize the exact command for each tool.
-* Three independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (lint + format + types), `pytest.yml` (with Postgres and Redis service containers), `security.yml` (bandit + pip-audit).
+* Three independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (lint + format + types), `pytest.yml` (with Postgres and Redis service containers), `security.yml` (bandit + pip-audit + OSV-Scanner).
 
 # Prerequisites
 
 * [uv](https://docs.astral.sh/uv/) (verified with the latest stable release)
 * Python 3.14 (uv installs it automatically if missing, per `.python-version`)
 * Git
+* [OSV-Scanner](https://google.github.io/osv-scanner/) on `PATH` (only needed for `make security`; on Windows, `choco install osv-scanner`)
 
 # Using this repository
 
@@ -51,7 +52,7 @@ make test             # pytest (unit + integration + acceptance, e2e excluded by
 make test-bdd         # only the acceptance tests (pytest -m bdd)
 make test-integration # only the integration tests (pytest -m integration)
 make test-e2e         # pytest -m e2e (requires Playwright installed: uv run --frozen playwright install)
-make security         # bandit + pip-audit --skip-editable
+make security         # bandit + pip-audit --skip-editable + osv-scanner
 make precommit        # run all pre-commit hooks by hand
 ```
 

@@ -33,9 +33,10 @@ test-integration: ## Run only the integration tests (need a real DB/service)
 test-e2e: ## Run end-to-end tests (requires: uv run --frozen playwright install)
 	uv run --frozen pytest -m e2e
 
-security: ## Run security scans (bandit SAST + pip-audit SCA)
+security: ## Run security scans (bandit SAST + pip-audit + OSV-Scanner SCA)
 	uv run --frozen bandit -c bandit.yaml -r src
 	uv run --frozen pip-audit --skip-editable
+	osv-scanner --lockfile=./uv.lock
 
 precommit: ## Run all pre-commit hooks against every file
 	uv run --frozen pre-commit run --all-files
