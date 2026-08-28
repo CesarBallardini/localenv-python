@@ -93,7 +93,7 @@ jobs:
           echo "$RUNNER_TEMP/gitleaks" >> "$GITHUB_PATH"
 
       - name: Scan the working tree for secrets
-        run: gitleaks dir . --redact --verbose
+        run: gitleaks dir . --redact --verbose -c .gitleaks.toml
 
   # osv-scanner is likewise a standalone Go binary, wired in as Google's
   # official reusable workflow so it scans uv.lock directly and uploads its

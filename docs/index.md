@@ -17,7 +17,7 @@ Every one of these fails the build rather than printing a warning:
 | Coverage floor (90%) | coverage | `.coveragerc` |
 | SAST | bandit | `bandit.yaml` |
 | Dependency CVEs | pip-audit + OSV-Scanner | `uv.lock` |
-| Secrets | gitleaks | `.pre-commit-config.yaml` |
+| Secrets | gitleaks | `.gitleaks.toml` |
 | Licenses | pip-licenses | `.github/workflows/security.yml` |
 | Commit messages | commitizen | `pyproject.toml` |
 
