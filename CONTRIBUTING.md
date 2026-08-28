@@ -20,7 +20,9 @@ with no target to list everything available.
 
 1. **Branch.** Commits to `main` are blocked by a hook on purpose; work lands
    through a pull request so the CI, coverage and security gates get a chance
-   to run first.
+   to run first. Name the branch `<type>/<slug>`, where `<type>` is the
+   Conventional Commits type of the work — `fix/gitleaks-scan-scope`,
+   `feat/quality-gates`. A `pre-push` hook enforces this.
 2. **Commit.** Messages follow
    [Conventional Commits](https://www.conventionalcommits.org/) — `feat:`,
    `fix:`, `docs:`, `chore:`, `refactor:`, `test:`, `ci:`. The `commit-msg`
@@ -34,6 +36,12 @@ with no target to list everything available.
 
 4. **Open the pull request.** Give it a Conventional Commits title — that is
    what determines the next version number.
+
+   Set the title *deliberately*; do not accept the one GitHub proposes. When a
+   branch has more than one commit, GitHub defaults the title to the humanised
+   branch name (`fix/gitleaks-scan-scope` becomes `Fix/gitleaks scan scope`),
+   which drops the colon and fails `validate-pr-title`. The `pre-push` hook
+   warns about this and suggests a starting point.
 
 ## What has to pass
 

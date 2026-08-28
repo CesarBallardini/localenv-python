@@ -3,6 +3,7 @@
 default_install_hook_types:
   - pre-commit
   - commit-msg
+  - pre-push
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -86,3 +87,18 @@ repos:
         entry: uv run --frozen cz check --commit-msg-file
         language: system
         stages: [commit-msg]
+
+      # Runs at push time, not commit time: the branch name is what GitHub
+      # derives a default pull request title from, and that title is what
+      # validate-pr-title rejects. Catching it here costs one push instead of
+      # one round trip through CI.
+      - id: check-branch-name
+        name: branch name and PR title convention
+        entry: .pre-commit-hooks/check-branch-name.sh
+        language: script
+        stages: [pre-push]
+        pass_filenames: false
+        always_run: true
+        # pre-commit swallows stdout on success, which would hide the pull
+        # request title advice -- the whole point of the hook.
+        verbose: true
