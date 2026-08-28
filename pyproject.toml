@@ -1,14 +1,19 @@
 [project]
 name = "task-list"
-version = "0.1.0"
+# The version is derived from the newest git tag by uv-dynamic-versioning, so
+# `cz bump` (version_provider = "scm") and the built wheel can never disagree.
+dynamic = ["version"]
 description = "Tooling-first scaffold for a Python backend project: linting, type checking, testing, and security wired up from day one."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = []
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "uv-dynamic-versioning"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/task_list"]
@@ -19,6 +24,8 @@ dev = [
     "pytest-cov",
     "pytest-xdist",
     "pytest-bdd",
+    "pytest-mock",
+    "pytest-timeout",
     "pytest-playwright",
     "factory-boy",
     "faker",
@@ -27,14 +34,43 @@ dev = [
     "pyrefly",
     "bandit[toml]",
     "pip-audit",
+    "pip-licenses",
     "pre-commit",
+    "commitizen",
 ]
 deploy = [
     "docker",
 ]
+doc = [
+    # MkDocs 2.0 removes the plugin system outright, which would take
+    # mkdocstrings, autorefs and mike with it, and moves config from YAML to
+    # TOML with no migration path. Bump deliberately, not incidentally.
+    # See https://squidfunk.github.io/mkdocs-material/blog/2026/02/18/mkdocs-2.0/
+    #
+    # 9.7.5 is the first Material release that caps mkdocs <2 itself, so the
+    # floor here is what makes the protection intrinsic rather than depending
+    # on the explicit cap above.
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9.7.5",
+    "mkdocstrings[python]>=0.27",
+    "mkdocs-autorefs>=1.4",
+    "mike>=2.1",
+]
+
+[tool.commitizen]
+# Conventional Commits, enforced in two places: the commit-msg pre-commit hook
+# on every local commit, and `cz check` over the PR title in CI (a squash merge
+# takes the PR title as the commit subject, so that is the one that lands).
+name = "cz_conventional_commits"
+tag_format = "v$version"
+version_scheme = "pep440"
+# The git tag is the single source of truth for the version -- nothing to bump
+# in a tracked file, so a release is a tag and not a commit.
+version_provider = "scm"
+update_changelog_on_bump = false
 
 [tool.pytest.ini_options]
-addopts = "-ra --strict-markers -m 'not e2e and not snapshot'"
+addopts = "-ra --strict-markers --durations=20 -m 'not e2e and not snapshot'"
 testpaths = ["tests"]
 markers = [
     "unit: fast tests with no external dependencies",
@@ -43,3 +79,8 @@ markers = [
     "e2e: end-to-end tests against a running instance (Playwright)",
     "snapshot: snapshot tests, excluded by default, run on demand",
 ]
+# A hung test should fail the build, not sit there until the job timeout kills
+# it with no useful output. timeout_func_only keeps the clock on the test body,
+# so a slow fixture (a container coming up) is not charged against it.
+timeout = 300
+timeout_func_only = true

@@ -1,8 +1,11 @@
 # README - localenv-python
 
+<!-- markdown-link-check-disable -->
 [![check](https://github.com/CesarBallardini/localenv-python/actions/workflows/check.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/check.yml)
 [![pytest](https://github.com/CesarBallardini/localenv-python/actions/workflows/pytest.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/pytest.yml)
 [![security](https://github.com/CesarBallardini/localenv-python/actions/workflows/security.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/security.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/CesarBallardini/localenv-python/badge)](https://scorecard.dev/viewer/?uri=github.com/CesarBallardini/localenv-python)
+<!-- markdown-link-check-enable -->
 
 Tooling scaffold for a Python backend: linting, type checking, tests organized by kind, and security, all wired up from the first commit — so "it's clean" is what happens by default, not something someone has to remember to run by hand.
 
@@ -14,10 +17,17 @@ This is the companion repo for the post [El tooling de un backend Python en seri
 * **[ruff](https://docs.astral.sh/ruff/)** as linter and formatter (`ruff.toml`).
 * **[pyright](https://microsoft.github.io/pyright/)** + **[pyrefly](https://pyrefly.org/)** as a pair of type checkers, run on purpose, not mid-migration (`pyrightconfig.json`, `pyrefly.toml`).
 * **[bandit](https://bandit.readthedocs.io/)** (SAST) with a baseline, and **[pip-audit](https://pypi.org/project/pip-audit/)** + **[OSV-Scanner](https://google.github.io/osv-scanner/)** (SCA) against `uv.lock` for security (`bandit.yaml`). OSV-Scanner is a standalone Go binary, not a PyPI package, so it doesn't go through `uv` — locally it just needs to be on `PATH` (`choco install osv-scanner` on Windows), in CI it runs via Google's official reusable workflow (see `security.yml`).
-* **[pytest](https://docs.pytest.org/)** with tests split by kind: `unit/`, `integration/`, `acceptance/` (BDD via [pytest-bdd](https://pytest-bdd.readthedocs.io/)), `e2e/` (via [pytest-playwright](https://playwright.dev/python/docs/test-runners)).
-* **[pre-commit](https://pre-commit.com/)** hooking lint, format, and lockfile checks before every commit.
+* **[gitleaks](https://github.com/gitleaks/gitleaks)** for secret scanning, at both ends: a pre-commit hook so a key never reaches a commit, and a full working-tree scan in CI. Both are pinned to the same version on purpose — the hook only ever sees *staged* changes (`gitleaks git --pre-commit --staged`), which is a no-op on a CI checkout, so the CI job scans the tree instead.
+* **[pytest](https://docs.pytest.org/)** with tests split by kind: `unit/`, `integration/`, `acceptance/` (BDD via [pytest-bdd](https://pytest-bdd.readthedocs.io/)), `e2e/` (via [pytest-playwright](https://playwright.dev/python/docs/test-runners)). Coverage is a **gate, not a report**: `.coveragerc` sets `fail_under = 90`, so `pytest --cov` exits non-zero below it and a coverage drop fails the build the same way a lint or type error does.
+* **[pre-commit](https://pre-commit.com/)** hooking lint, format, lockfile, secret-scanning and file-hygiene checks before every commit — and CI runs *the same hooks* via `pre-commit run --all-files`, so what passes locally and what passes in CI can't drift apart.
+* **[pip-licenses](https://pypi.org/project/pip-licenses/)** for license compliance: the whole toolchain gets reported, but only the *distributed* dependency closure is gated — dev tooling never ships, so it cannot create an obligation.
+* **[commitizen](https://commitizen-tools.github.io/commitizen/)** for [Conventional Commits](https://www.conventionalcommits.org/), checked on the commit message locally (`commit-msg` hook) and on the PR title in CI — a squash merge takes the title as the commit subject, so that is the one that lands.
+* **[MkDocs](https://www.mkdocs.org/) + [Material](https://squidfunk.github.io/mkdocs-material/) + [mkdocstrings](https://mkdocstrings.github.io/) + [mike](https://github.com/jimporter/mike)** for the docs, built with `--strict` in CI (a dangling API reference fails the build) and published per release tag.
+* A **devcontainer** (`.devcontainer/`, `Dockerfile`) and shared editor settings (`.vscode/settings.json`), so a fresh clone gets the same toolchain without a setup ritual.
 * A `Makefile` as the single interface — nobody needs to memorize the exact command for each tool.
-* Three independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (lint + format + types), `pytest.yml` (with Postgres and Redis service containers), `security.yml` (bandit + pip-audit + OSV-Scanner).
+* Independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (pre-commit + pyright + pyrefly), `pytest.yml` (with Postgres and Redis service containers, plus the coverage gate), `security.yml` (bandit + pip-audit + gitleaks + OSV-Scanner) and `scorecard.yaml` (OpenSSF Scorecard).
+* **Supply-chain hygiene in the workflows themselves**: every action pinned to a commit SHA with a `# vX.Y.Z` comment (a tag is mutable, a digest isn't), a default-deny `permissions: {}` at the top of each workflow with each job opting back into just what it needs, `concurrency` so a new push supersedes the run it replaced, and `timeout-minutes` on every job. The shared setup lives in two composite actions (`.github/actions/install-uv`, `.github/actions/setup-python`) instead of being copy-pasted per workflow.
+* **[Dependabot](https://docs.github.com/code-security/dependabot)** (`.github/dependabot.yml`) for `uv`, `github-actions` and `pre-commit`, weekly and grouped into one PR per ecosystem, with a 10-day `cooldown` so a compromised or yanked release isn't picked up the day it ships.
 
 # Prerequisites
 
@@ -25,6 +35,7 @@ This is the companion repo for the post [El tooling de un backend Python en seri
 * Python 3.14 (uv installs it automatically if missing, per `.python-version`)
 * Git
 * [OSV-Scanner](https://google.github.io/osv-scanner/) on `PATH` (only needed for `make security`; on Windows, `choco install osv-scanner`)
+* [gitleaks](https://github.com/gitleaks/gitleaks) on `PATH` (only needed for `make secrets`/`make security`; on Windows, `choco install gitleaks`). The pre-commit hook installs its own copy, so committing works without this.
 
 # Using this repository
 
@@ -52,7 +63,14 @@ make test             # pytest (unit + integration + acceptance, e2e excluded by
 make test-bdd         # only the acceptance tests (pytest -m bdd)
 make test-integration # only the integration tests (pytest -m integration)
 make test-e2e         # pytest -m e2e (requires Playwright installed: uv run --frozen playwright install)
-make security         # bandit + pip-audit --skip-editable + osv-scanner
+make coverage         # pytest with coverage, enforcing the 90% floor from .coveragerc
+make security         # every scan: bandit + pip-audit + osv-scanner + gitleaks + licenses
+make secrets          # gitleaks over the working tree
+make licenses         # license report, gating what actually ships
+make docs             # mkdocs build --strict
+make docs-serve       # mkdocs serve, with live reload
+make release-next     # what version the next release would get (creates no tag)
+make clean            # remove build, cache and coverage artifacts
 make precommit        # run all pre-commit hooks by hand
 ```
 
@@ -68,6 +86,9 @@ tests/
     features/             # .feature files (Gherkin) -- task_list.feature
     steps/                 # pytest-bdd step definitions
   e2e/                    # against a running instance, via Playwright (placeholder)
+docs/
+  index.md               # docs landing page
+  reference.md           # API reference, generated from docstrings by mkdocstrings
 ```
 
 The real example is `tasks.py`: an in-memory task list (add, complete, remove), chosen on purpose because it needs no database or external adapter — enough to show unit tests and BDD (`tests/unit/test_tasks.py`, `tests/acceptance/features/task_list.feature`) without getting into infrastructure yet. `integration/` and `e2e/` stay as unused placeholders: that jump is exactly the topic of the series' second post (hexagonal architecture), where this same domain becomes a good candidate to split into a port + an adapter.
@@ -101,20 +122,36 @@ If an update breaks something, `uv lock --upgrade-package <package>` scoped to t
 
 # Building a wheel
 
-The installable package is `task_list` (`[project] name` and the importable package deliberately match, see `[tool.hatch.build.targets.wheel]` in `pyproject.toml`, with `hatchling` as build backend). To generate the wheel:
+The installable package is `task_list` (`[project] name` and the importable package deliberately match, see `[tool.hatch.build.targets.wheel]` in `pyproject.toml`, with `hatchling` as build backend).
+
+There is **no version number in a tracked file**. `uv-dynamic-versioning` derives it from the newest git tag, and `cz bump` (in the `release` workflow) is what creates that tag — so the wheel, the git tag and the published docs cannot disagree about what version this is. Before the first tag exists, builds come out as `0.0.0.post<N>.dev0+<sha>`.
+
+To generate the wheel:
 
 ```bash
 uv build
 ```
 
-This leaves `dist/task_list-0.1.0-py3-none-any.whl` and the matching sdist. To test it installed in another environment:
+This leaves `dist/task_list-<version>-py3-none-any.whl` and the matching sdist, where `<version>` comes from the git tag. To test it installed in another environment:
 
 ```bash
-uv pip install dist/task_list-0.1.0-py3-none-any.whl
+uv pip install dist/task_list-*-py3-none-any.whl
 python -c "from task_list.tasks import TaskList; print(TaskList().pending())"
 ```
 
 The `py.typed` marker that ships in `src/task_list/` travels inside the wheel, so any project that installs this package and imports it also inherits its type hints instead of its type checker treating it as `Any`.
+
+# Alternatives considered and not adopted
+
+**[uv-secure](https://pypi.org/project/uv-secure/)** — scans `uv.lock` for known vulnerabilities, natively, with no intermediate `requirements.txt` export and some nice ergonomics (`ignore_unfixed`, severity columns, per-vulnerability ignores in `pyproject.toml`). It's a good tool and a natural fit for a uv-based project.
+
+It's not here because its job is already covered twice over: **pip-audit** queries [PyPA's advisory database](https://github.com/pypa/advisory-database) plus OSV against the *installed* environment, and **OSV-Scanner** queries [OSV.dev](https://osv.dev/) against `uv.lock` directly — which is exactly uv-secure's scope, from the same upstream data source. Adding a third scanner over the same advisories would mean three tools to keep pinned and three sets of ignore-rules to keep in sync, in exchange for near-duplicate findings. The one thing it would genuinely add — vulnerability triage config living in `pyproject.toml` — isn't worth that yet at this size.
+
+Worth revisiting if OSV-Scanner's Go binary ever becomes awkward to install in some environment: uv-secure is a PyPI package, so it would go through `uv` like everything else.
+
+**[FOSSA](https://fossa.com/)** — license compliance and attribution reporting. Genuinely more capable than what's here: it resolves the full transitive license graph, handles dual-licensing properly, and produces attribution documents. It's also commercial, needs an API key in CI, and answers a question this repository doesn't have yet. **[pip-licenses](https://pypi.org/project/pip-licenses/)** covers the 80% that matters — it's in `security.yml` and in `make licenses`, reporting the whole toolchain and failing the build only on strong copyleft in the dependencies that actually ship.
+
+**[nwa](https://github.com/B1NARY-GR0UP/nwa)** — inserts and verifies per-file copyright headers, with a CI job to check them. Deferred, not rejected: it earns its place under a file-level copyleft licence like MPL-2.0, where the header carries real legal weight per file. This project is MIT, where a single `LICENSE` at the root does the job, and per-file headers would be noise in every diff. Revisit if the licence changes or if files start being vendored out to other projects.
 
 # What's missing (on purpose)
 
