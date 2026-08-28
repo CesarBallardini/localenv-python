@@ -46,7 +46,7 @@ security: ## Run every security scan (SAST + CVEs + secrets + licenses)
 	$(MAKE) licenses
 
 secrets: ## Scan the working tree for committed secrets (needs gitleaks on PATH)
-	gitleaks dir . --redact --verbose
+	gitleaks dir . --redact --verbose -c .gitleaks.toml
 
 licenses: ## Report dependency licenses and gate the ones that actually ship
 	uv run --frozen pip-licenses --format=markdown

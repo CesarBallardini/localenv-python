@@ -84,3 +84,17 @@ markers = [
 # so a slow fixture (a container coming up) is not charged against it.
 timeout = 300
 timeout_func_only = true
+# Warnings are failures, like every other gate here -- a DeprecationWarning is
+# a future breakage that has already been diagnosed for us, and the only way it
+# stays visible is if it stops the build.
+#
+# Each ignore below must name a specific message, never a bare category, and
+# must say why it cannot simply be fixed. Anything not listed is an error.
+filterwarnings = [
+    "error",
+    # gherkin passes `maxsplit` positionally to re.split, deprecated in 3.13+.
+    # No upgrade path: pytest-bdd 8.1.0 is the latest release and pins
+    # gherkin-official <30, while the 29.x line only ever had 29.0.0. Revisit
+    # when pytest-bdd widens that pin.
+    "ignore:'maxsplit' is passed as positional argument:DeprecationWarning",
+]
