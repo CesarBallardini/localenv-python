@@ -13,3 +13,6 @@ build/
 *.egg-info/
 site/
 .pre-commit.yaml
+
+# libFuzzer writes the inputs that crash it here.
+crash-*

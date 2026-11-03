@@ -1,0 +1,40 @@
+name: fuzz
+
+# A short run on every change, and a longer one each week to keep searching
+# after the code has stopped changing.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "40 15 * * 3"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: ./.github/actions/setup-python
+
+      - name: Fuzz the task list
+        run: make fuzz FUZZ_SECONDS=${{ github.event_name == 'schedule' && 600 || 60 }}
+
+      # libFuzzer writes the input that crashed it to crash-<hash>.
+      - name: Keep the crashing input
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-crash
+          path: crash-*
+          retention-days: 30

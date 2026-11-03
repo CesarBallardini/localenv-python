@@ -5,6 +5,7 @@
 [![pytest](https://github.com/CesarBallardini/localenv-python/actions/workflows/pytest.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/pytest.yml)
 [![security](https://github.com/CesarBallardini/localenv-python/actions/workflows/security.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/security.yml)
 [![devcontainer](https://github.com/CesarBallardini/localenv-python/actions/workflows/devcontainer.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/devcontainer.yml)
+[![fuzz](https://github.com/CesarBallardini/localenv-python/actions/workflows/fuzz.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/fuzz.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/CesarBallardini/localenv-python/badge)](https://scorecard.dev/viewer/?uri=github.com/CesarBallardini/localenv-python)
 <!-- markdown-link-check-enable -->
 
@@ -63,7 +64,7 @@ This is the companion repo for the post [El tooling de un backend Python en seri
 * **[MkDocs](https://www.mkdocs.org/) + [Material](https://squidfunk.github.io/mkdocs-material/) + [mkdocstrings](https://mkdocstrings.github.io/) + [mike](https://github.com/jimporter/mike)** for the docs, built with `--strict` in CI (a dangling API reference fails the build) and published per release tag.
 * A **devcontainer** (`.devcontainer/`, `Dockerfile`) and shared editor settings (`.vscode/settings.json`), so a fresh clone gets the same toolchain without a setup ritual.
 * A `Makefile` as the single interface — nobody needs to memorize the exact command for each tool.
-* Independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (pre-commit + pyright + pyrefly), `pytest.yml` (with Postgres and Redis service containers, plus the coverage gate), `security.yml` (bandit + pip-audit + gitleaks + OSV-Scanner), `devcontainer.yml` (builds the `Dockerfile` and runs the tests inside it) and `scorecard.yaml` (OpenSSF Scorecard).
+* Independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (pre-commit + pyright + pyrefly), `pytest.yml` (with Postgres and Redis service containers, plus the coverage gate), `security.yml` (bandit + pip-audit + gitleaks + OSV-Scanner), `devcontainer.yml` (builds the `Dockerfile` and runs the tests inside it), `fuzz.yml` (Atheris over the task list) and `scorecard.yaml` (OpenSSF Scorecard).
 * **Supply-chain hygiene in the workflows themselves**: every action pinned to a commit SHA with a `# vX.Y.Z` comment (a tag is mutable, a digest isn't), a default-deny `permissions: {}` at the top of each workflow with each job opting back into just what it needs, `concurrency` so a new push supersedes the run it replaced, and `timeout-minutes` on every job. The shared setup lives in two composite actions (`.github/actions/install-uv`, `.github/actions/setup-python`) instead of being copy-pasted per workflow.
 * **[Dependabot](https://docs.github.com/code-security/dependabot)** (`.github/dependabot.yml`) for `uv`, `github-actions`, `docker` and `pre-commit`, weekly and grouped into one PR per ecosystem, with a 10-day `cooldown` so a compromised or yanked release isn't picked up the day it ships (commented out until 2026-11-13; see `SECURITY.md`).
 
@@ -91,6 +92,7 @@ make test-bdd         # only the acceptance tests (pytest -m bdd)
 make test-integration # only the integration tests (pytest -m integration)
 make test-e2e         # pytest -m e2e (requires Playwright installed: uv run --frozen playwright install)
 make coverage         # pytest with coverage, enforcing the 90% floor from .coveragerc
+make fuzz             # Atheris over the task list, 60 seconds by default (Linux x86_64 only, so use the devcontainer on Windows)
 make security         # every scan: bandit + pip-audit + osv-scanner + gitleaks + licenses
 make secrets          # gitleaks over the working tree
 make licenses         # license report, gating what actually ships
@@ -113,6 +115,8 @@ tests/
     features/             # .feature files (Gherkin) -- task_list.feature
     steps/                 # pytest-bdd step definitions
   e2e/                    # against a running instance, via Playwright (placeholder)
+fuzz/
+  fuzz_tasks.py          # Atheris target: random operations, checked against a plain dict
 docs/
   index.md               # docs landing page
   reference.md           # API reference, generated from docstrings by mkdocstrings
