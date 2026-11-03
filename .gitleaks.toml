@@ -29,4 +29,5 @@ paths = [
   '''(^|[\/])\.ruff_cache[\/]''',
   '''(^|[\/])\.pyrefly_cache[\/]''',
   '''(^|[\/])\.mypy_cache[\/]''',
+  '''(^|[\/])fuzz[\/](corpus|artifacts)[\/]''',
 ]

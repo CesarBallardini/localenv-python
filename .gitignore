@@ -14,5 +14,6 @@ build/
 site/
 .pre-commit.yaml
 
-# libFuzzer writes the inputs that crash it here.
-crash-*
+# What libFuzzer writes: the inputs it keeps, and the ones that broke the target.
+/fuzz/corpus/
+/fuzz/artifacts/

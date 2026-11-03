@@ -8,5 +8,5 @@
 # pyrefly is young and its config schema evolves -- check
 # https://pyrefly.org/ for the current keys before relying on this file.
 
-project-includes = ["src", "tests"]
+project-includes = ["src", "tests", "fuzz"]
 python-version = "3.14"

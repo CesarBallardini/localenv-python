@@ -8,7 +8,7 @@ help: ## Show this list of available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*## "}; {printf "\033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
 install: ## Sync the environment (from the committed lockfile) and install the git hooks
-	uv sync --all-groups --frozen
+	uv sync --all-groups --no-group fuzz --frozen
 	uv run --frozen pre-commit install
 
 qa: lint types coverage security docs ## Run the quality gates: lint, types, tests with coverage, security, docs
@@ -43,7 +43,9 @@ coverage: ## Run the test suite with coverage and enforce the floor from .covera
 FUZZ_SECONDS ?= 60
 
 fuzz: ## Fuzz the task list, FUZZ_SECONDS long (Linux x86_64 only)
-	uv run --frozen python fuzz/fuzz_tasks.py -max_total_time=$(FUZZ_SECONDS)
+	mkdir -p fuzz/corpus fuzz/artifacts
+	uv run --frozen --no-default-groups --group fuzz python fuzz/fuzz_tasks.py fuzz/corpus \
+	  -artifact_prefix=fuzz/artifacts/ -timeout=30 -max_total_time=$(FUZZ_SECONDS)
 
 security: ## Run every security scan (SAST + CVEs + secrets + licenses)
 	uv run --frozen bandit -c bandit.yaml -r src
@@ -82,4 +84,4 @@ precommit: ## Run all pre-commit hooks against every file
 
 clean: ## Remove build, cache and coverage artifacts
 	rm -rf site/ dist/ build/ htmlcov/ .coverage coverage.xml \
-	       .pytest_cache/ .ruff_cache/ .pyrefly_cache/
+	       .pytest_cache/ .ruff_cache/ .pyrefly_cache/ fuzz/corpus/ fuzz/artifacts/

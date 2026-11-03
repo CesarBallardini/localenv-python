@@ -13,3 +13,5 @@ site/
 dist/
 build/
 *.egg-info/
+fuzz/corpus/
+fuzz/artifacts/
