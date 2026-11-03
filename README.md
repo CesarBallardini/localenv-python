@@ -32,7 +32,7 @@ This is the companion repo for the post [El tooling de un backend Python en seri
 # Prerequisites
 
 * [uv](https://docs.astral.sh/uv/) (verified with the latest stable release)
-* Python 3.14 (uv installs it automatically if missing, per `.python-version`)
+* Python 3.14.10 (uv installs it automatically if missing, per `.python-version`)
 * Git
 * [OSV-Scanner](https://google.github.io/osv-scanner/) on `PATH` (only needed for `make security`; on Windows, `choco install osv-scanner`)
 * [gitleaks](https://github.com/gitleaks/gitleaks) on `PATH` (only needed for `make secrets`/`make security`; on Windows, `choco install gitleaks`). The pre-commit hook installs its own copy, so committing works without this.

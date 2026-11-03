@@ -2,8 +2,9 @@ name: Set up the Python environment
 description: Install uv and sync the project environment from the committed lockfile.
 
 # Python itself is not installed with actions/setup-python: uv provisions the
-# interpreter named in .python-version as part of `uv sync`, so the runner's
-# preinstalled Pythons are irrelevant and CI matches a local `make install`.
+# interpreter named in .python-version as part of `uv sync`, so CI matches a
+# local `make install`. That file names one exact release because uv prefers a
+# Python it finds: given only `3.14`, it took the runner's older /usr/bin/python3.14.
 
 inputs:
   uv-version:

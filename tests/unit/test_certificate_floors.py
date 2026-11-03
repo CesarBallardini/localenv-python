@@ -63,9 +63,18 @@ def test_uv_stays_at_or_above_the_floor() -> None:
 
 
 @pytest.mark.unit
-def test_the_python_image_stays_at_or_above_the_floor() -> None:
-    tag = only_match('Dockerfile', rf'^FROM python:{DOTTED_VERSION}-slim\b')
-    assert version_of(tag) >= version_of('3.14.10')
+@pytest.mark.parametrize(
+    ('relative_path', 'pattern', 'floor'),
+    [
+        ('Dockerfile', rf'^FROM python:{DOTTED_VERSION}-slim\b', '3.14.10'),
+        # A bare `3.14` fails here too, as it should: uv would take any older 3.14 it finds, as it did on the runner.
+        ('.python-version', rf'^{DOTTED_VERSION}$', '3.14.10'),
+        ('.pre-commit-config.yaml', rf'id: gitleaks\n.*\n +language_version: {DOTTED_VERSION}$', '1.27.3'),
+        ('.pre-commit-config.yaml', rf'id: markdown-link-check\n.*\n +language_version: {DOTTED_VERSION}$', '24.22.1'),
+    ],
+)
+def test_the_other_pins_stay_at_or_above_the_floor(relative_path: str, pattern: str, floor: str) -> None:
+    assert version_of(only_match(relative_path, pattern)) >= version_of(floor)
 
 
 @pytest.mark.unit
