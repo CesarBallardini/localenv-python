@@ -4,6 +4,7 @@
 [![check](https://github.com/CesarBallardini/localenv-python/actions/workflows/check.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/check.yml)
 [![pytest](https://github.com/CesarBallardini/localenv-python/actions/workflows/pytest.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/pytest.yml)
 [![security](https://github.com/CesarBallardini/localenv-python/actions/workflows/security.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/security.yml)
+[![devcontainer](https://github.com/CesarBallardini/localenv-python/actions/workflows/devcontainer.yml/badge.svg)](https://github.com/CesarBallardini/localenv-python/actions/workflows/devcontainer.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/CesarBallardini/localenv-python/badge)](https://scorecard.dev/viewer/?uri=github.com/CesarBallardini/localenv-python)
 <!-- markdown-link-check-enable -->
 
@@ -11,12 +12,49 @@ Tooling scaffold for a Python backend: linting, type checking, tests organized b
 
 This is the companion repo for the post [El tooling de un backend Python en serio, antes de escribir la primera ruta](https://katra.ballardini.com.ar/posts/python-tooling-backend-desde-cero/) — everything here is generic and reusable, not any client's code.
 
+# Quick start
+
+1. Install the [prerequisites](#prerequisites): uv, Git and Make for everything, plus OSV-Scanner and gitleaks for `make qa`.
+
+2. Clone the repository:
+
+   ```bash
+   git clone https://github.com/CesarBallardini/localenv-python
+   cd localenv-python
+   ```
+
+3. Install the environment from the committed lockfile, and the git hooks:
+
+   ```bash
+   make install
+   ```
+
+4. Run the tests:
+
+   ```bash
+   make test
+   ```
+
+5. Run the quality gates: lint, types, tests with coverage, security and docs.
+
+   ```bash
+   make qa
+   ```
+
+   CI also runs the pre-commit hooks. To run them locally, create a branch first and use `make precommit`, because one of the hooks fails on `main` on purpose.
+
+6. List every other target:
+
+   ```bash
+   make
+   ```
+
 # What's in here
 
 * **[uv](https://docs.astral.sh/uv/)** for dependency and environment management, with separate groups (`dev` vs `deploy`).
 * **[ruff](https://docs.astral.sh/ruff/)** as linter and formatter (`ruff.toml`).
 * **[pyright](https://microsoft.github.io/pyright/)** + **[pyrefly](https://pyrefly.org/)** as a pair of type checkers, run on purpose, not mid-migration (`pyrightconfig.json`, `pyrefly.toml`).
-* **[bandit](https://bandit.readthedocs.io/)** (SAST) with a baseline, and **[pip-audit](https://pypi.org/project/pip-audit/)** + **[OSV-Scanner](https://google.github.io/osv-scanner/)** (SCA) against `uv.lock` for security (`bandit.yaml`). OSV-Scanner is a standalone Go binary, not a PyPI package, so it doesn't go through `uv` — locally it just needs to be on `PATH` (`choco install osv-scanner` on Windows), in CI it runs via Google's official reusable workflow (see `security.yml`).
+* **[bandit](https://bandit.readthedocs.io/)** (SAST), and **[pip-audit](https://pypi.org/project/pip-audit/)** + **[OSV-Scanner](https://google.github.io/osv-scanner/)** (SCA) against `uv.lock` for security (`bandit.yaml`). OSV-Scanner is a standalone Go binary, not a PyPI package, so it doesn't go through `uv` — locally it just needs to be on `PATH` (`choco install osv-scanner` on Windows), in CI it runs via Google's official reusable workflow (see `security.yml`).
 * **[gitleaks](https://github.com/gitleaks/gitleaks)** for secret scanning, at both ends: a pre-commit hook so a key never reaches a commit, and a full working-tree scan in CI. `.gitleaks.toml` keeps the tree scan off `.venv/` and the other generated directories — 148 MB of vendored third-party code that yields hundreds of false positives and cannot leak anything of ours. Both ends are pinned to the same version on purpose — the hook only ever sees *staged* changes (`gitleaks git --pre-commit --staged`), which is a no-op on a CI checkout, so the CI job scans the tree instead.
 * **[pytest](https://docs.pytest.org/)** with tests split by kind: `unit/`, `integration/`, `acceptance/` (BDD via [pytest-bdd](https://pytest-bdd.readthedocs.io/)), `e2e/` (via [pytest-playwright](https://playwright.dev/python/docs/test-runners)). Coverage is a **gate, not a report**: `.coveragerc` sets `fail_under = 90`, so `pytest --cov` exits non-zero below it and a coverage drop fails the build the same way a lint or type error does.
 * **[pre-commit](https://pre-commit.com/)** hooking lint, format, lockfile, secret-scanning and file-hygiene checks before every commit — and CI runs *the same hooks* via `pre-commit run --all-files`, so what passes locally and what passes in CI can't drift apart.
@@ -25,37 +63,26 @@ This is the companion repo for the post [El tooling de un backend Python en seri
 * **[MkDocs](https://www.mkdocs.org/) + [Material](https://squidfunk.github.io/mkdocs-material/) + [mkdocstrings](https://mkdocstrings.github.io/) + [mike](https://github.com/jimporter/mike)** for the docs, built with `--strict` in CI (a dangling API reference fails the build) and published per release tag.
 * A **devcontainer** (`.devcontainer/`, `Dockerfile`) and shared editor settings (`.vscode/settings.json`), so a fresh clone gets the same toolchain without a setup ritual.
 * A `Makefile` as the single interface — nobody needs to memorize the exact command for each tool.
-* Independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (pre-commit + pyright + pyrefly), `pytest.yml` (with Postgres and Redis service containers, plus the coverage gate), `security.yml` (bandit + pip-audit + gitleaks + OSV-Scanner) and `scorecard.yaml` (OpenSSF Scorecard).
+* Independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (pre-commit + pyright + pyrefly), `pytest.yml` (with Postgres and Redis service containers, plus the coverage gate), `security.yml` (bandit + pip-audit + gitleaks + OSV-Scanner), `devcontainer.yml` (builds the `Dockerfile` and runs the tests inside it) and `scorecard.yaml` (OpenSSF Scorecard).
 * **Supply-chain hygiene in the workflows themselves**: every action pinned to a commit SHA with a `# vX.Y.Z` comment (a tag is mutable, a digest isn't), a default-deny `permissions: {}` at the top of each workflow with each job opting back into just what it needs, `concurrency` so a new push supersedes the run it replaced, and `timeout-minutes` on every job. The shared setup lives in two composite actions (`.github/actions/install-uv`, `.github/actions/setup-python`) instead of being copy-pasted per workflow.
-* **[Dependabot](https://docs.github.com/code-security/dependabot)** (`.github/dependabot.yml`) for `uv`, `github-actions` and `pre-commit`, weekly and grouped into one PR per ecosystem, with a 10-day `cooldown` so a compromised or yanked release isn't picked up the day it ships (commented out until 2026-11-13; see `SECURITY.md`).
+* **[Dependabot](https://docs.github.com/code-security/dependabot)** (`.github/dependabot.yml`) for `uv`, `github-actions`, `docker` and `pre-commit`, weekly and grouped into one PR per ecosystem, with a 10-day `cooldown` so a compromised or yanked release isn't picked up the day it ships (commented out until 2026-11-13; see `SECURITY.md`).
 
 # Prerequisites
 
 * [uv](https://docs.astral.sh/uv/) (verified with the latest stable release)
 * Python 3.14.10 (uv installs it automatically if missing, per `.python-version`)
 * Git
-* [OSV-Scanner](https://google.github.io/osv-scanner/) on `PATH` (only needed for `make security`; on Windows, `choco install osv-scanner`)
-* [gitleaks](https://github.com/gitleaks/gitleaks) on `PATH` (only needed for `make secrets`/`make security`; on Windows, `choco install gitleaks`). The pre-commit hook installs its own copy, so committing works without this.
+* Make (on Windows, `choco install make`)
+* [OSV-Scanner](https://google.github.io/osv-scanner/) on `PATH` (only needed for `make security`/`make qa`; on Windows, `choco install osv-scanner`)
+* [gitleaks](https://github.com/gitleaks/gitleaks) on `PATH` (only needed for `make secrets`/`make security`/`make qa`; on Windows, `choco install gitleaks`). The pre-commit hook installs its own copy, so committing works without this.
 
 # Using this repository
 
-Clone it:
-
-```bash
-git clone https://github.com/CesarBallardini/localenv-python
-cd localenv-python
-```
-
-Install dependencies and the pre-commit hooks:
-
-```bash
-make install
-```
-
-From there, everything goes through the Makefile:
+After the [quick start](#quick-start), everything goes through the Makefile:
 
 ```bash
 make                  # no target: lists all available targets
+make qa               # lint + types + coverage + security + docs
 make lint             # ruff check + ruff format --check
 make format           # ruff format + ruff check --fix
 make types            # pyright + pyrefly

@@ -14,6 +14,8 @@ ROOT = Path(__file__).parents[2]
 UV_FLOOR = '0.13.6'
 DOTTED_VERSION = r'(\d+(?:\.\d+)*)'
 INPUT_DEFAULT = rf'default: "{DOTTED_VERSION}"'
+PYTHON_IMAGE = rf'^FROM python:{DOTTED_VERSION}-slim\b'
+PYTHON_VERSION_FILE = rf'^{DOTTED_VERSION}$'
 UV_PINS = {
     '.github/actions/install-uv/action.yaml': INPUT_DEFAULT,
     '.github/actions/setup-python/action.yaml': INPUT_DEFAULT,
@@ -58,6 +60,11 @@ def test_every_uv_pin_moves_together() -> None:
 
 
 @pytest.mark.unit
+def test_the_devcontainer_runs_the_python_that_python_version_names() -> None:
+    assert only_match('Dockerfile', PYTHON_IMAGE) == only_match('.python-version', PYTHON_VERSION_FILE)
+
+
+@pytest.mark.unit
 def test_uv_stays_at_or_above_the_floor() -> None:
     assert all(version_of(pin) >= version_of(UV_FLOOR) for pin in uv_pins().values()), uv_pins()
 
@@ -66,9 +73,9 @@ def test_uv_stays_at_or_above_the_floor() -> None:
 @pytest.mark.parametrize(
     ('relative_path', 'pattern', 'floor'),
     [
-        ('Dockerfile', rf'^FROM python:{DOTTED_VERSION}-slim\b', '3.14.10'),
+        ('Dockerfile', PYTHON_IMAGE, '3.14.10'),
         # A bare `3.14` fails here too, as it should: uv would take any older 3.14 it finds, as it did on the runner.
-        ('.python-version', rf'^{DOTTED_VERSION}$', '3.14.10'),
+        ('.python-version', PYTHON_VERSION_FILE, '3.14.10'),
         ('.pre-commit-config.yaml', rf'id: gitleaks\n.*\n +language_version: {DOTTED_VERSION}$', '1.27.3'),
         ('.pre-commit-config.yaml', rf'id: markdown-link-check\n.*\n +language_version: {DOTTED_VERSION}$', '24.22.2'),
     ],

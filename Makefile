@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install lint format types test test-bdd test-integration test-e2e \
+.PHONY: help install qa lint format types test test-bdd test-integration test-e2e \
         coverage security secrets licenses docs docs-serve release-next \
         precommit clean
 
@@ -10,6 +10,8 @@ help: ## Show this list of available targets
 install: ## Sync the environment (from the committed lockfile) and install the git hooks
 	uv sync --all-groups --frozen
 	uv run --frozen pre-commit install
+
+qa: lint types coverage security docs ## Run the quality gates: lint, types, tests with coverage, security, docs
 
 lint: ## Check formatting and lint rules without modifying files
 	uv run --frozen ruff check .

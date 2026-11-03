@@ -43,6 +43,25 @@ updates:
     # cooldown:
     #   default-days: 10
 
+  # The FROM lines in the Dockerfile: the tag and the digest move together.
+  #
+  # Neither bump can land alone. A Python bump fails the test until .python-version
+  # moves with it, and a uv bump fails it until the composite actions do.
+  #
+  # Python takes patch releases only: a new minor also means changing requires-python
+  # and the versions in ruff.toml, pyrightconfig.json and pyrefly.toml.
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "python"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+    # cooldown:
+    #   default-days: 10
+
   # pre-commit hook revs (cooldown is not supported for this ecosystem).
   - package-ecosystem: "pre-commit"
     directory: "/"

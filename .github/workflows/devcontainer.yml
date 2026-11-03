@@ -1,0 +1,35 @@
+name: devcontainer
+
+# Nothing else builds the Dockerfile, so a bad base image bump would only show
+# up when someone next opens the devcontainer.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  devcontainer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build the image
+        run: docker build --tag localenv-python-devcontainer .
+
+      # The same steps the devcontainer runs on create, then the tests. The
+      # checkout belongs to the runner's user and the container runs as root, so
+      # git has to be told to trust it.
+      - name: Install and test inside the image
+        run: >-
+          docker run --rm --volume "$PWD:/workspace" localenv-python-devcontainer
+          sh -c 'git config --global --add safe.directory /workspace && make install && make test'

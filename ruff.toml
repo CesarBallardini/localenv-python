@@ -16,6 +16,12 @@ select = [
     "TCH",          # flake8-type-checking
     "YTT",          # flake8-2020
     "D",            # pydocstyle
+    "ANN",          # flake8-annotations
+    "ARG",          # unused arguments
+    "PL",           # pylint
+    "FLY",          # flynt: static join to f-string
+    "RUF",          # ruff-specific rules
+    "T20",          # print() left in the code
 ]
 ignore = [
     "D203",  # one-blank-line-before-class -- conflicts with D211

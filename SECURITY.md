@@ -46,10 +46,11 @@ being backported.
 
 | Concern | Tool |
 | --- | --- |
-| Vulnerable dependencies | `pip-audit` and OSV-Scanner, over `uv.lock` |
+| Vulnerable dependencies | `pip-audit` and OSV-Scanner, over `uv.lock`; Dependabot alerts and security updates open the fixes |
 | Insecure code patterns | `bandit` |
 | Committed secrets | `gitleaks`, as a hook and over the whole tree in CI |
 | Dependency freshness | Dependabot, weekly, with a 10-day cooldown (commented out until 2026-11-13: the eMudhra certificate advisory of 2026-10-20 named releases younger than that) |
 | Supply-chain posture | OpenSSF Scorecard |
+| Unchecked changes on `main` | a ruleset: no deletion or force push, changes land through a pull request, and the CI checks must pass |
 | Workflow tampering | every action pinned to a commit digest; `permissions: {}` by default |
 | License obligations | `pip-licenses`, gating the distributed dependencies |
