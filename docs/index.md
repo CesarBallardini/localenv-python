@@ -25,7 +25,7 @@ Every one of these fails the build rather than printing a warning:
 | Commit messages | commitizen | `pyproject.toml` |
 
 On GitHub, a ruleset on `main` requires a pull request and these checks before
-a change can merge. Fuzzing also runs on every pull request but is not required.
+a change can merge.
 
 ## Getting started
 

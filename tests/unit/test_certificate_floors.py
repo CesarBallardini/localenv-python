@@ -74,6 +74,7 @@ def test_uv_stays_at_or_above_the_floor() -> None:
     ('relative_path', 'pattern', 'floor'),
     [
         ('Dockerfile', PYTHON_IMAGE, '3.14.10'),
+        ('Dockerfile', rf'^FROM node:{DOTTED_VERSION}-slim\b', '24.22.2'),
         # A bare `3.14` fails here too, as it should: uv would take any older 3.14 it finds, as it did on the runner.
         ('.python-version', PYTHON_VERSION_FILE, '3.14.10'),
         ('.pre-commit-config.yaml', rf'id: gitleaks\n.*\n +language_version: {DOTTED_VERSION}$', '1.27.3'),

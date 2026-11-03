@@ -26,10 +26,11 @@ jobs:
       - name: Build the image
         run: docker build --tag localenv-python-devcontainer .
 
-      # The same steps the devcontainer runs on create, then the tests. The
+      # The same steps the devcontainer runs on create, then the tests and the
+      # type checkers, which have broken here before when CI still passed. The
       # checkout belongs to the runner's user and the container runs as root, so
       # git has to be told to trust it.
-      - name: Install and test inside the image
+      - name: Install, test and type-check inside the image
         run: >-
           docker run --rm --volume "$PWD:/workspace" localenv-python-devcontainer
-          sh -c 'git config --global --add safe.directory /workspace && make install && make test'
+          sh -c 'git config --global --add safe.directory /workspace && make install && make test && make types'
