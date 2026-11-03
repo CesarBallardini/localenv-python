@@ -11,6 +11,43 @@ Tooling scaffold for a Python backend: linting, type checking, tests organized b
 
 This is the companion repo for the post [El tooling de un backend Python en serio, antes de escribir la primera ruta](https://katra.ballardini.com.ar/posts/python-tooling-backend-desde-cero/) — everything here is generic and reusable, not any client's code.
 
+# Quick start
+
+1. Install the [prerequisites](#prerequisites): uv, Git and Make for everything, plus OSV-Scanner and gitleaks for `make qa`.
+
+2. Clone the repository:
+
+   ```bash
+   git clone https://github.com/CesarBallardini/localenv-python
+   cd localenv-python
+   ```
+
+3. Install the environment from the committed lockfile, and the git hooks:
+
+   ```bash
+   make install
+   ```
+
+4. Run the tests:
+
+   ```bash
+   make test
+   ```
+
+5. Run the quality gates: lint, types, tests with coverage, security and docs.
+
+   ```bash
+   make qa
+   ```
+
+   CI also runs the pre-commit hooks. To run them locally, create a branch first and use `make precommit`, because one of the hooks fails on `main` on purpose.
+
+6. List every other target:
+
+   ```bash
+   make
+   ```
+
 # What's in here
 
 * **[uv](https://docs.astral.sh/uv/)** for dependency and environment management, with separate groups (`dev` vs `deploy`).
@@ -34,28 +71,17 @@ This is the companion repo for the post [El tooling de un backend Python en seri
 * [uv](https://docs.astral.sh/uv/) (verified with the latest stable release)
 * Python 3.14.10 (uv installs it automatically if missing, per `.python-version`)
 * Git
-* [OSV-Scanner](https://google.github.io/osv-scanner/) on `PATH` (only needed for `make security`; on Windows, `choco install osv-scanner`)
-* [gitleaks](https://github.com/gitleaks/gitleaks) on `PATH` (only needed for `make secrets`/`make security`; on Windows, `choco install gitleaks`). The pre-commit hook installs its own copy, so committing works without this.
+* Make (on Windows, `choco install make`)
+* [OSV-Scanner](https://google.github.io/osv-scanner/) on `PATH` (only needed for `make security`/`make qa`; on Windows, `choco install osv-scanner`)
+* [gitleaks](https://github.com/gitleaks/gitleaks) on `PATH` (only needed for `make secrets`/`make security`/`make qa`; on Windows, `choco install gitleaks`). The pre-commit hook installs its own copy, so committing works without this.
 
 # Using this repository
 
-Clone it:
-
-```bash
-git clone https://github.com/CesarBallardini/localenv-python
-cd localenv-python
-```
-
-Install dependencies and the pre-commit hooks:
-
-```bash
-make install
-```
-
-From there, everything goes through the Makefile:
+After the [quick start](#quick-start), everything goes through the Makefile:
 
 ```bash
 make                  # no target: lists all available targets
+make qa               # lint + types + coverage + security + docs
 make lint             # ruff check + ruff format --check
 make format           # ruff format + ruff check --fix
 make types            # pyright + pyrefly
