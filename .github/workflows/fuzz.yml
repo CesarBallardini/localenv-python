@@ -1,7 +1,8 @@
 name: fuzz
 
 # A short run on every change, and a longer one each week to keep searching
-# after the code has stopped changing.
+# after the code has stopped changing. The corpus is cached between runs, so
+# each one starts from what the last one found.
 
 on:
   push:
@@ -14,7 +15,9 @@ permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Only a newer push to a pull request replaces a run. On main, the runs from
+  # pushes and the schedule share this group, and must not cancel each other.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   fuzz:
@@ -26,15 +29,25 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: ./.github/actions/setup-python
+        with:
+          sync-args: "--no-default-groups --group fuzz --frozen"
+
+      # The key is unique, so every run saves its corpus. The prefix restores the newest one.
+      - name: Restore and save the corpus
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: fuzz/corpus
+          key: fuzz-corpus-${{ github.run_id }}
+          restore-keys: fuzz-corpus-
 
       - name: Fuzz the task list
         run: make fuzz FUZZ_SECONDS=${{ github.event_name == 'schedule' && 600 || 60 }}
 
-      # libFuzzer writes the input that crashed it to crash-<hash>.
-      - name: Keep the crashing input
-        if: failure()
+      # crash-*, timeout-*, oom-* or leak-*. Cancelled too, in case the job timeout ended it.
+      - name: Keep the input that broke the target
+        if: failure() || cancelled()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: fuzz-crash
-          path: crash-*
+          name: fuzz-artifacts
+          path: fuzz/artifacts/
           retention-days: 30

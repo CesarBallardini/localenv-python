@@ -14,7 +14,7 @@ inputs:
   sync-args:
     description: Arguments passed to `uv sync`.
     required: false
-    default: "--all-groups --frozen"
+    default: "--all-groups --no-group fuzz --frozen"
 
 runs:
   using: composite
