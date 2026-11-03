@@ -59,7 +59,7 @@ Every one of these fails the build rather than printing a warning:
 | Lint, types, coverage, security and docs together | `make qa` |
 | Every hook at once, from a branch | `make precommit` |
 | Fuzzing, Linux x86_64 only | `make fuzz` |
-| The devcontainer image builds and passes the tests | CI only (`devcontainer.yml`) |
+| The devcontainer image builds and passes the tests and type checks | CI only (`devcontainer.yml`) |
 
 CI runs the *same* pre-commit hooks you do (`pre-commit run --all-files`), so
 a green local run and a green CI run cannot drift apart. The only one it skips
@@ -67,9 +67,8 @@ is `no-commit-to-branch`, because a build has `main` checked out.
 
 The ruleset on `main` requires these checks before a pull request can merge:
 `check`, `docs`, `pytest`, `security`, `licenses`, `gitleaks`,
-`osv-scanner / osv-scan`, `validate-pr-title` and `devcontainer`. It requires
-no approvals, and nobody can bypass it. `fuzz` runs on every pull request but
-is not required.
+`osv-scanner / osv-scan`, `validate-pr-title`, `devcontainer` and `fuzz`. It
+requires no approvals, and nobody can bypass it.
 
 ### About the coverage floor
 
