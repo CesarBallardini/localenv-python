@@ -48,6 +48,7 @@ being backported.
 | --- | --- |
 | Vulnerable dependencies | `pip-audit` and OSV-Scanner, over `uv.lock`; Dependabot alerts and security updates open the fixes |
 | Insecure code patterns | `bandit` |
+| Unexpected inputs | Atheris, on every change and for longer each week |
 | Committed secrets | `gitleaks`, as a hook and over the whole tree in CI |
 | Dependency freshness | Dependabot, weekly, with a 10-day cooldown (commented out until 2026-11-13: the eMudhra certificate advisory of 2026-10-20 named releases younger than that) |
 | Supply-chain posture | OpenSSF Scorecard |

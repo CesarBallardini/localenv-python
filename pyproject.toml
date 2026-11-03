@@ -41,6 +41,10 @@ dev = [
 deploy = [
     "docker",
 ]
+fuzz = [
+    # Atheris only publishes Linux x86_64 wheels.
+    "atheris; sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
 doc = [
     # MkDocs 2.0 removes the plugin system outright, which would take
     # mkdocstrings, autorefs and mike with it, and moves config from YAML to

@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install qa lint format types test test-bdd test-integration test-e2e \
+.PHONY: help install qa lint format types test test-bdd test-integration test-e2e fuzz \
         coverage security secrets licenses docs docs-serve release-next \
         precommit clean
 
@@ -39,6 +39,11 @@ test-e2e: ## Run end-to-end tests (requires: uv run --frozen playwright install)
 
 coverage: ## Run the test suite with coverage and enforce the floor from .coveragerc
 	uv run --frozen pytest --cov=task_list --cov-config=.coveragerc --cov-report=term-missing --cov-report=html
+
+FUZZ_SECONDS ?= 60
+
+fuzz: ## Fuzz the task list, FUZZ_SECONDS long (Linux x86_64 only)
+	uv run --frozen python fuzz/fuzz_tasks.py -max_total_time=$(FUZZ_SECONDS)
 
 security: ## Run every security scan (SAST + CVEs + secrets + licenses)
 	uv run --frozen bandit -c bandit.yaml -r src
