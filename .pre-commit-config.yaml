@@ -40,11 +40,15 @@ repos:
     rev: v8.30.1
     hooks:
       - id: gitleaks
+        # Go at or above the eMudhra advisory's floor, instead of whatever Go the host has.
+        language_version: 1.27.3
 
   - repo: https://github.com/tcort/markdown-link-check
     rev: v3.15.0
     hooks:
       - id: markdown-link-check
+        # An explicit version: with none, nodeenv takes the newest entry in Node's index, and a 27.0.0 alpha crashes it.
+        language_version: 24.22.2
         args: [-q]
 
   - repo: local

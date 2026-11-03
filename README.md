@@ -27,12 +27,12 @@ This is the companion repo for the post [El tooling de un backend Python en seri
 * A `Makefile` as the single interface — nobody needs to memorize the exact command for each tool.
 * Independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (pre-commit + pyright + pyrefly), `pytest.yml` (with Postgres and Redis service containers, plus the coverage gate), `security.yml` (bandit + pip-audit + gitleaks + OSV-Scanner) and `scorecard.yaml` (OpenSSF Scorecard).
 * **Supply-chain hygiene in the workflows themselves**: every action pinned to a commit SHA with a `# vX.Y.Z` comment (a tag is mutable, a digest isn't), a default-deny `permissions: {}` at the top of each workflow with each job opting back into just what it needs, `concurrency` so a new push supersedes the run it replaced, and `timeout-minutes` on every job. The shared setup lives in two composite actions (`.github/actions/install-uv`, `.github/actions/setup-python`) instead of being copy-pasted per workflow.
-* **[Dependabot](https://docs.github.com/code-security/dependabot)** (`.github/dependabot.yml`) for `uv`, `github-actions` and `pre-commit`, weekly and grouped into one PR per ecosystem, with a 10-day `cooldown` so a compromised or yanked release isn't picked up the day it ships.
+* **[Dependabot](https://docs.github.com/code-security/dependabot)** (`.github/dependabot.yml`) for `uv`, `github-actions` and `pre-commit`, weekly and grouped into one PR per ecosystem, with a 10-day `cooldown` so a compromised or yanked release isn't picked up the day it ships (commented out until 2026-11-13; see `SECURITY.md`).
 
 # Prerequisites
 
 * [uv](https://docs.astral.sh/uv/) (verified with the latest stable release)
-* Python 3.14 (uv installs it automatically if missing, per `.python-version`)
+* Python 3.14.10 (uv installs it automatically if missing, per `.python-version`)
 * Git
 * [OSV-Scanner](https://google.github.io/osv-scanner/) on `PATH` (only needed for `make security`; on Windows, `choco install osv-scanner`)
 * [gitleaks](https://github.com/gitleaks/gitleaks) on `PATH` (only needed for `make secrets`/`make security`; on Windows, `choco install gitleaks`). The pre-commit hook installs its own copy, so committing works without this.
