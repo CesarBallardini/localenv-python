@@ -19,7 +19,13 @@ Every one of these fails the build rather than printing a warning:
 | Dependency CVEs | pip-audit + OSV-Scanner | `uv.lock` |
 | Secrets | gitleaks | `.gitleaks.toml` |
 | Licenses | pip-licenses | `.github/workflows/security.yml` |
+| Fuzzing | Atheris | `fuzz/fuzz_tasks.py` |
+| Docs | MkDocs, `--strict` | `mkdocs.yml` |
+| Devcontainer image | Docker | `Dockerfile` |
 | Commit messages | commitizen | `pyproject.toml` |
+
+On GitHub, a ruleset on `main` requires a pull request and these checks before
+a change can merge. Fuzzing also runs on every pull request but is not required.
 
 ## Getting started
 
@@ -27,13 +33,17 @@ Every one of these fails the build rather than printing a warning:
 git clone https://github.com/CesarBallardini/localenv-python
 cd localenv-python
 make install
+make test
+make qa
 ```
 
-Everything else goes through the `Makefile` — run `make` with no target to list
-what is available.
+`make qa` runs lint, types, tests with coverage, security and the docs build. It
+needs OSV-Scanner and gitleaks on `PATH`. Everything else goes through the
+`Makefile` — run `make` with no target to list what is available.
 
 ## Where the version comes from
 
 There is no version number in a tracked file. `uv-dynamic-versioning` derives
-it from the newest git tag, and `cz bump` creates that tag, so the wheel and
-the release can never disagree.
+it from the newest git tag, and the `release` workflow creates that tag, with
+`cz bump` working out the next version, so the wheel and the release can never
+disagree.
