@@ -70,7 +70,7 @@ def test_uv_stays_at_or_above_the_floor() -> None:
         # A bare `3.14` fails here too, as it should: uv would take any older 3.14 it finds, as it did on the runner.
         ('.python-version', rf'^{DOTTED_VERSION}$', '3.14.10'),
         ('.pre-commit-config.yaml', rf'id: gitleaks\n.*\n +language_version: {DOTTED_VERSION}$', '1.27.3'),
-        ('.pre-commit-config.yaml', rf'id: markdown-link-check\n.*\n +language_version: {DOTTED_VERSION}$', '24.22.1'),
+        ('.pre-commit-config.yaml', rf'id: markdown-link-check\n.*\n +language_version: {DOTTED_VERSION}$', '24.22.2'),
     ],
 )
 def test_the_other_pins_stay_at_or_above_the_floor(relative_path: str, pattern: str, floor: str) -> None:
