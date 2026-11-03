@@ -52,25 +52,27 @@ This is the companion repo for the post [El tooling de un backend Python en seri
 
 # What's in here
 
-* **[uv](https://docs.astral.sh/uv/)** for dependency and environment management, with separate groups (`dev` vs `deploy`).
+* **[uv](https://docs.astral.sh/uv/)** for dependency and environment management, with separate groups (`dev`, `deploy`, `doc` and `fuzz`).
 * **[ruff](https://docs.astral.sh/ruff/)** as linter and formatter (`ruff.toml`).
 * **[pyright](https://microsoft.github.io/pyright/)** + **[pyrefly](https://pyrefly.org/)** as a pair of type checkers, run on purpose, not mid-migration (`pyrightconfig.json`, `pyrefly.toml`).
 * **[bandit](https://bandit.readthedocs.io/)** (SAST), and **[pip-audit](https://pypi.org/project/pip-audit/)** + **[OSV-Scanner](https://google.github.io/osv-scanner/)** (SCA) against `uv.lock` for security (`bandit.yaml`). OSV-Scanner is a standalone Go binary, not a PyPI package, so it doesn't go through `uv` — locally it just needs to be on `PATH` (`choco install osv-scanner` on Windows), in CI it runs via Google's official reusable workflow (see `security.yml`).
 * **[gitleaks](https://github.com/gitleaks/gitleaks)** for secret scanning, at both ends: a pre-commit hook so a key never reaches a commit, and a full working-tree scan in CI. `.gitleaks.toml` keeps the tree scan off `.venv/` and the other generated directories — 148 MB of vendored third-party code that yields hundreds of false positives and cannot leak anything of ours. Both ends are pinned to the same version on purpose — the hook only ever sees *staged* changes (`gitleaks git --pre-commit --staged`), which is a no-op on a CI checkout, so the CI job scans the tree instead.
 * **[pytest](https://docs.pytest.org/)** with tests split by kind: `unit/`, `integration/`, `acceptance/` (BDD via [pytest-bdd](https://pytest-bdd.readthedocs.io/)), `e2e/` (via [pytest-playwright](https://playwright.dev/python/docs/test-runners)). Coverage is a **gate, not a report**: `.coveragerc` sets `fail_under = 90`, so `pytest --cov` exits non-zero below it and a coverage drop fails the build the same way a lint or type error does.
-* **[pre-commit](https://pre-commit.com/)** hooking lint, format, lockfile, secret-scanning and file-hygiene checks before every commit — and CI runs *the same hooks* via `pre-commit run --all-files`, so what passes locally and what passes in CI can't drift apart.
+* **[pre-commit](https://pre-commit.com/)** hooking lint, format, lockfile, SAST, secret-scanning, link-checking and file-hygiene checks before every commit — and CI runs *the same hooks* via `pre-commit run --all-files`, so what passes locally and what passes in CI can't drift apart.
+* **[Atheris](https://github.com/google/atheris)** for fuzzing: `fuzz/fuzz_tasks.py` runs random sequences of operations on the task list and checks them against a plain dict, for 60 seconds on every change and 10 minutes each week. Atheris only publishes Linux x86_64 wheels, so on Windows `make fuzz` runs in the devcontainer, and it is not part of `make qa`.
 * **[pip-licenses](https://pypi.org/project/pip-licenses/)** for license compliance: the whole toolchain gets reported, but only the *distributed* dependency closure is gated — dev tooling never ships, so it cannot create an obligation.
 * **[commitizen](https://commitizen-tools.github.io/commitizen/)** for [Conventional Commits](https://www.conventionalcommits.org/), checked on the commit message locally (`commit-msg` hook) and on the PR title in CI — a squash merge takes the title as the commit subject, so that is the one that lands.
 * **[MkDocs](https://www.mkdocs.org/) + [Material](https://squidfunk.github.io/mkdocs-material/) + [mkdocstrings](https://mkdocstrings.github.io/) + [mike](https://github.com/jimporter/mike)** for the docs, built with `--strict` in CI (a dangling API reference fails the build) and published per release tag.
 * A **devcontainer** (`.devcontainer/`, `Dockerfile`) and shared editor settings (`.vscode/settings.json`), so a fresh clone gets the same toolchain without a setup ritual.
 * A `Makefile` as the single interface — nobody needs to memorize the exact command for each tool.
-* Independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (pre-commit + pyright + pyrefly), `pytest.yml` (with Postgres and Redis service containers, plus the coverage gate), `security.yml` (bandit + pip-audit + gitleaks + OSV-Scanner), `devcontainer.yml` (builds the `Dockerfile` and runs the tests inside it), `fuzz.yml` (Atheris over the task list) and `scorecard.yaml` (OpenSSF Scorecard).
-* **Supply-chain hygiene in the workflows themselves**: every action pinned to a commit SHA with a `# vX.Y.Z` comment (a tag is mutable, a digest isn't), a default-deny `permissions: {}` at the top of each workflow with each job opting back into just what it needs, `concurrency` so a new push supersedes the run it replaced, and `timeout-minutes` on every job. The shared setup lives in two composite actions (`.github/actions/install-uv`, `.github/actions/setup-python`) instead of being copy-pasted per workflow.
-* **[Dependabot](https://docs.github.com/code-security/dependabot)** (`.github/dependabot.yml`) for `uv`, `github-actions`, `docker` and `pre-commit`, weekly and grouped into one PR per ecosystem, with a 10-day `cooldown` so a compromised or yanked release isn't picked up the day it ships (commented out until 2026-11-13; see `SECURITY.md`).
+* Independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (pre-commit + pyright + pyrefly + the docs build), `pytest.yml` (with Postgres and Redis service containers, plus the coverage gate), `security.yml` (bandit + pip-audit + pip-licenses + gitleaks + OSV-Scanner), `devcontainer.yml` (builds the `Dockerfile` and runs the tests inside it), `fuzz.yml` (Atheris over the task list) and `scorecard.yaml` (OpenSSF Scorecard). Three more have no badge: `validate_pr_title.yaml` checks the PR title, `release.yaml` creates the version tag, and `docs.yaml` publishes the docs for that tag.
+* A **ruleset on `main`**: no deletion or force push, every change lands through a pull request, and the CI checks must pass before it can merge. Nobody can bypass it. It requires no approvals, because a sole maintainer cannot approve their own pull requests.
+* **Supply-chain hygiene in the workflows themselves**: every action pinned to a commit SHA with a `# vX.Y.Z` comment (a tag is mutable, a digest isn't), a default-deny `permissions: {}` at the top of each workflow with each job opting back into just what it needs, `concurrency` so a new push supersedes the run it replaced, and `timeout-minutes` on every job. The images in the `Dockerfile` are pinned by digest for the same reason. The shared setup lives in two composite actions (`.github/actions/install-uv`, `.github/actions/setup-python`) instead of being copy-pasted per workflow.
+* **[Dependabot](https://docs.github.com/code-security/dependabot)** (`.github/dependabot.yml`) for `uv`, `github-actions`, `docker` and `pre-commit`, weekly. `uv`, the workflows' actions and `pre-commit` are each grouped into one PR, while the composite action and the Docker images get their own, and the Python image only takes patch releases. Dependabot security updates open fixes for known advisories. There is a 10-day `cooldown` so a compromised or yanked release isn't picked up the day it ships (commented out until 2026-11-13; see `SECURITY.md`).
 
 # Prerequisites
 
-* [uv](https://docs.astral.sh/uv/) (verified with the latest stable release)
+* [uv](https://docs.astral.sh/uv/) 0.13.6 or newer (older releases still trust the compromised eMudhra certificates)
 * Python 3.14.10 (uv installs it automatically if missing, per `.python-version`)
 * Git
 * Make (on Windows, `choco install make`)
@@ -109,7 +111,7 @@ make precommit        # run all pre-commit hooks by hand
 src/task_list/
   tasks.py               # example: in-memory task list, no DB
 tests/
-  unit/                  # no infrastructure, fast (test_tasks.py)
+  unit/                  # no infrastructure, fast (test_tasks.py, test_certificate_floors.py)
   integration/            # need a real DB/service (placeholder, not used yet)
   acceptance/
     features/             # .feature files (Gherkin) -- task_list.feature
@@ -146,7 +148,7 @@ Both commands rewrite `uv.lock` — review the diff (`git diff uv.lock`) before 
 
 ```bash
 uv sync --all-groups   # installs whatever just landed in the updated lock
-make lint types test security
+make qa
 ```
 
 If an update breaks something, `uv lock --upgrade-package <package>` scoped to that one package makes it much easier to find which version was the culprit.
@@ -155,7 +157,7 @@ If an update breaks something, `uv lock --upgrade-package <package>` scoped to t
 
 The installable package is `task_list` (`[project] name` and the importable package deliberately match, see `[tool.hatch.build.targets.wheel]` in `pyproject.toml`, with `hatchling` as build backend).
 
-There is **no version number in a tracked file**. `uv-dynamic-versioning` derives it from the newest git tag, and `cz bump` (in the `release` workflow) is what creates that tag — so the wheel, the git tag and the published docs cannot disagree about what version this is. Before the first tag exists, builds come out as `0.0.0.post<N>.dev0+<sha>`.
+There is **no version number in a tracked file**. `uv-dynamic-versioning` derives it from the newest git tag, and the `release` workflow creates that tag, with `cz bump` working out the next version — so the wheel, the git tag and the published docs cannot disagree about what version this is. Before the first tag exists, builds come out as `0.0.0.post<N>.dev0+<sha>`.
 
 To generate the wheel:
 

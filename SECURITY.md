@@ -31,6 +31,7 @@ supply chain and the CI configuration:
 
 - a dependency in `uv.lock`;
 - a GitHub Actions workflow, a composite action, or a pinned action digest;
+- an image in the `Dockerfile`, or its pinned digest;
 - a pre-commit hook definition;
 - a secret accidentally committed to the history.
 
@@ -38,7 +39,8 @@ Reports about those are very much in scope.
 
 ## Supported versions
 
-The newest release is the supported one. This is a scaffold meant to be copied
+The newest release is the supported one, or `main` until the first release
+is tagged. This is a scaffold meant to be copied
 into new projects, so fixes go to `main` and land in the next tag rather than
 being backported.
 
@@ -54,4 +56,5 @@ being backported.
 | Supply-chain posture | OpenSSF Scorecard |
 | Unchecked changes on `main` | a ruleset: no deletion or force push, changes land through a pull request, and the CI checks must pass |
 | Workflow tampering | every action pinned to a commit digest; `permissions: {}` by default |
+| Image tampering | the images in the `Dockerfile` pinned by digest |
 | License obligations | `pip-licenses`, gating the distributed dependencies |

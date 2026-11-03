@@ -10,7 +10,7 @@
 ## Checklist
 
 - [ ] The PR title follows [Conventional Commits](https://www.conventionalcommits.org/) — it becomes the commit subject on a squash merge, and determines the next version.
-- [ ] `make lint types test coverage security` passes locally.
+- [ ] `make qa` passes locally.
 - [ ] Tests cover the change; coverage stays at or above the 90% floor.
 - [ ] Docs updated if behaviour, tooling or the developer workflow changed.
 - [ ] No secret, credential or real hostname in the diff.
