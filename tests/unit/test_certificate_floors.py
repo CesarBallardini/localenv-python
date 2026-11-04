@@ -21,6 +21,17 @@ UV_PINS = {
     '.github/actions/setup-python/action.yaml': INPUT_DEFAULT,
     'Dockerfile': rf'ghcr\.io/astral-sh/uv:{DOTTED_VERSION}',
 }
+SCANNER_PINS = {
+    'gitleaks': {
+        '.github/workflows/security.yml': rf'GITLEAKS_VERSION: {DOTTED_VERSION}$',
+        '.pre-commit-config.yaml': rf'gitleaks/gitleaks\n +rev: v{DOTTED_VERSION}$',
+        'Dockerfile': rf'/gitleaks/v8@v{DOTTED_VERSION}$',
+    },
+    'osv-scanner': {
+        '.github/workflows/security.yml': rf'osv-scanner-reusable\.yml@\w+ # v{DOTTED_VERSION}$',
+        'Dockerfile': rf'/osv-scanner@v{DOTTED_VERSION}$',
+    },
+}
 type Version = tuple[int, ...]
 
 
@@ -60,6 +71,13 @@ def test_every_uv_pin_moves_together() -> None:
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize('pins', SCANNER_PINS.values(), ids=SCANNER_PINS)
+def test_every_scanner_pin_moves_together(pins: dict[str, str]) -> None:
+    versions = {relative_path: only_match(relative_path, pattern) for relative_path, pattern in pins.items()}
+    assert len(set(versions.values())) == 1, versions
+
+
+@pytest.mark.unit
 def test_the_devcontainer_runs_the_python_that_python_version_names() -> None:
     assert only_match('Dockerfile', PYTHON_IMAGE) == only_match('.python-version', PYTHON_VERSION_FILE)
 
@@ -75,6 +93,7 @@ def test_uv_stays_at_or_above_the_floor() -> None:
     [
         ('Dockerfile', PYTHON_IMAGE, '3.14.10'),
         ('Dockerfile', rf'^FROM node:{DOTTED_VERSION}-slim\b', '24.22.2'),
+        ('Dockerfile', rf'^FROM golang:{DOTTED_VERSION}-alpine\b', '1.27.3'),
         # A bare `3.14` fails here too, as it should: uv would take any older 3.14 it finds, as it did on the runner.
         ('.python-version', PYTHON_VERSION_FILE, '3.14.10'),
         ('.pre-commit-config.yaml', rf'id: gitleaks\n.*\n +language_version: {DOTTED_VERSION}$', '1.27.3'),

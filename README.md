@@ -15,7 +15,7 @@ This is the companion repo for the post [El tooling de un backend Python en seri
 
 # Quick start
 
-1. Install the [prerequisites](#prerequisites): uv, Git and Make for everything, plus OSV-Scanner and gitleaks for `make qa`.
+1. Install the [prerequisites](#prerequisites): uv, Git and Make for everything, plus OSV-Scanner and gitleaks for `make qa`. The devcontainer already has them all.
 
 2. Clone the repository:
 
@@ -63,9 +63,9 @@ This is the companion repo for the post [El tooling de un backend Python en seri
 * **[pip-licenses](https://pypi.org/project/pip-licenses/)** for license compliance: the whole toolchain gets reported, but only the *distributed* dependency closure is gated — dev tooling never ships, so it cannot create an obligation.
 * **[commitizen](https://commitizen-tools.github.io/commitizen/)** for [Conventional Commits](https://www.conventionalcommits.org/), checked on the commit message locally (`commit-msg` hook) and on the PR title in CI — a squash merge takes the title as the commit subject, so that is the one that lands.
 * **[MkDocs](https://www.mkdocs.org/) + [Material](https://squidfunk.github.io/mkdocs-material/) + [mkdocstrings](https://mkdocstrings.github.io/) + [mike](https://github.com/jimporter/mike)** for the docs, built with `--strict` in CI (a dangling API reference fails the build) and published per release tag.
-* A **devcontainer** (`.devcontainer/`, `Dockerfile`) and shared editor settings (`.vscode/settings.json`), so a fresh clone gets the same toolchain without a setup ritual.
+* A **devcontainer** (`.devcontainer/`, `Dockerfile`) and shared editor settings (`.vscode/settings.json`), so a fresh clone gets the same toolchain without a setup ritual. The image builds OSV-Scanner and gitleaks from source on a Go at the eMudhra floor, because the published binaries sit below it, so `make qa` passes inside it. The cost is a first build several minutes longer.
 * A `Makefile` as the single interface — nobody needs to memorize the exact command for each tool.
-* Independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (pre-commit + pyright + pyrefly + the docs build), `pytest.yml` (the tests, plus the coverage gate), `security.yml` (bandit + pip-audit + pip-licenses + gitleaks + OSV-Scanner), `devcontainer.yml` (builds the `Dockerfile` and runs the tests and type checkers inside it), `fuzz.yml` (Atheris over the task list) and `scorecard.yaml` (OpenSSF Scorecard). Three more have no badge: `validate_pr_title.yaml` checks the PR title, `release.yaml` creates the version tag, and `docs.yaml` publishes the docs for that tag.
+* Independent GitHub Actions workflows in `.github/workflows/`, one per concern, each with its own badge above: `check.yml` (pre-commit + pyright + pyrefly + the docs build), `pytest.yml` (the tests, plus the coverage gate), `security.yml` (bandit + pip-audit + pip-licenses + gitleaks + OSV-Scanner), `devcontainer.yml` (builds the `Dockerfile` and runs `make qa` inside it), `fuzz.yml` (Atheris over the task list) and `scorecard.yaml` (OpenSSF Scorecard). Three more have no badge: `validate_pr_title.yaml` checks the PR title, `release.yaml` creates the version tag, and `docs.yaml` publishes the docs for that tag.
 * A **ruleset on `main`**: no deletion or force push, every change lands through a pull request, and the CI checks must pass before it can merge. Nobody can bypass it. It requires no approvals, because a sole maintainer cannot approve their own pull requests.
 * **Supply-chain hygiene in the workflows themselves**: every action pinned to a commit SHA with a `# vX.Y.Z` comment (a tag is mutable, a digest isn't), a default-deny `permissions: {}` at the top of each workflow with each job opting back into just what it needs, `concurrency` so a new push supersedes the run it replaced, and `timeout-minutes` on every job. The images in the `Dockerfile` are pinned by digest for the same reason. The shared setup lives in two composite actions (`.github/actions/install-uv`, `.github/actions/setup-python`) instead of being copy-pasted per workflow.
 * **[Dependabot](https://docs.github.com/code-security/dependabot)** (`.github/dependabot.yml`) for `uv`, `github-actions`, `docker` and `pre-commit`, weekly. `uv`, the workflows' actions and `pre-commit` are each grouped into one PR, while the composite action and the Docker images get their own, the Python image only takes patch releases, and the Node image stays on its major line. Dependabot security updates open fixes for known advisories. There is a 10-day `cooldown` so a compromised or yanked release isn't picked up the day it ships (commented out until 2026-11-13; see `SECURITY.md`).
@@ -76,8 +76,8 @@ This is the companion repo for the post [El tooling de un backend Python en seri
 * Python 3.14.10 (uv installs it automatically if missing, per `.python-version`)
 * Git
 * Make (on Windows, `choco install make`)
-* [OSV-Scanner](https://google.github.io/osv-scanner/) on `PATH` (only needed for `make security`/`make qa`; on Windows, `choco install osv-scanner`)
-* [gitleaks](https://github.com/gitleaks/gitleaks) on `PATH` (only needed for `make secrets`/`make security`/`make qa`; on Windows, `choco install gitleaks`). The pre-commit hook installs its own copy, so committing works without this.
+* [OSV-Scanner](https://google.github.io/osv-scanner/) on `PATH` (only needed for `make security`/`make qa`; the devcontainer has it; on Windows, `choco install osv-scanner`)
+* [gitleaks](https://github.com/gitleaks/gitleaks) on `PATH` (only needed for `make secrets`/`make security`/`make qa`; the devcontainer has it; on Windows, `choco install gitleaks`). The pre-commit hook installs its own copy, so committing works without this.
 
 # Using this repository
 

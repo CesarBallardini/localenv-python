@@ -38,8 +38,9 @@ make qa
 ```
 
 `make qa` runs lint, types, tests with coverage, security and the docs build. It
-needs OSV-Scanner and gitleaks on `PATH`. Everything else goes through the
-`Makefile` — run `make` with no target to list what is available.
+needs OSV-Scanner and gitleaks on `PATH`, and the devcontainer already has both.
+Everything else goes through the `Makefile` — run `make` with no target to list
+what is available.
 
 ## Where the version comes from
 
