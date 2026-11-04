@@ -23,7 +23,7 @@ UV_PINS = {
 }
 SCANNER_PINS = {
     'gitleaks': {
-        '.github/workflows/security.yml': rf'GITLEAKS_VERSION: {DOTTED_VERSION}$',
+        '.github/workflows/security.yml': rf'/gitleaks/v8@v{DOTTED_VERSION}$',
         '.pre-commit-config.yaml': rf'gitleaks/gitleaks\n +rev: v{DOTTED_VERSION}$',
         'Dockerfile': rf'/gitleaks/v8@v{DOTTED_VERSION}$',
     },
@@ -94,6 +94,7 @@ def test_uv_stays_at_or_above_the_floor() -> None:
         ('Dockerfile', PYTHON_IMAGE, '3.14.10'),
         ('Dockerfile', rf'^FROM node:{DOTTED_VERSION}-slim\b', '24.22.2'),
         ('Dockerfile', rf'^FROM golang:{DOTTED_VERSION}-alpine\b', '1.27.3'),
+        ('.github/workflows/security.yml', rf'go-version: "{DOTTED_VERSION}"$', '1.27.3'),
         # A bare `3.14` fails here too, as it should: uv would take any older 3.14 it finds, as it did on the runner.
         ('.python-version', PYTHON_VERSION_FILE, '3.14.10'),
         ('.pre-commit-config.yaml', rf'id: gitleaks\n.*\n +language_version: {DOTTED_VERSION}$', '1.27.3'),
