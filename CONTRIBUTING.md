@@ -59,7 +59,7 @@ Every one of these fails the build rather than printing a warning:
 | Lint, types, coverage, security and docs together | `make qa` |
 | Every hook at once, from a branch | `make precommit` |
 | Fuzzing, Linux x86_64 only | `make fuzz` |
-| The devcontainer image builds and passes the tests and type checks | CI only (`devcontainer.yml`) |
+| The devcontainer image builds and passes `make qa` | CI only (`devcontainer.yml`) |
 
 CI runs the *same* pre-commit hooks you do (`pre-commit run --all-files`), so
 a green local run and a green CI run cannot drift apart. The only one it skips

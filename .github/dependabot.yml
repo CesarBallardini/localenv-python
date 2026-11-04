@@ -22,6 +22,7 @@ updates:
     # cooldown:
     #   default-days: 10
 
+  # An OSV-Scanner bump fails the test until the Dockerfile moves with it.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -66,7 +67,8 @@ updates:
     # cooldown:
     #   default-days: 10
 
-  # pre-commit hook revs (cooldown is not supported for this ecosystem).
+  # pre-commit hook revs (cooldown is not supported for this ecosystem). A gitleaks
+  # bump fails the test until security.yml and the Dockerfile move with it.
   - package-ecosystem: "pre-commit"
     directory: "/"
     schedule:

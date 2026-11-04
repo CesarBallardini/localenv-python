@@ -15,10 +15,20 @@ FROM ghcr.io/astral-sh/uv:0.13.7@sha256:96f40d3904aad8d0bd010539001d36c8e2188b98
 # on PyPI reaches the eMudhra floor, so pyright[nodejs] is not an option.
 FROM node:24.22.2-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c AS node
 
+# The scanners `make security` runs, built here because the published binaries sit
+# below the eMudhra floor: gitleaks on Go 1.24.13 and OSV-Scanner on Go 1.27.0. Go's
+# checksum database fixes what these tags resolve to. Dependabot cannot read a RUN
+# line, so a test holds both versions to security.yml and the gitleaks hook.
+FROM golang:1.27.3-alpine@sha256:d200d2dd76b03a99b52651fd1325aff7dcd35422c35c01bac56571b0507f3deb AS scanners
+ENV CGO_ENABLED=0 GOBIN=/scanners
+RUN go install github.com/zricethezav/gitleaks/v8@v8.30.1
+RUN go install github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.7.0
+
 FROM python:3.14.10-slim@sha256:930e1abba7c4e8f96ed93e8012c35d174d7732752731bbd5e8e757d7ec6f3966
 
 COPY --from=uv /uv /uvx /usr/local/bin/
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=scanners /scanners/ /usr/local/bin/
 
 # git and make for the workflow itself. No Debian Go or Node: they sit below the
 # releases that stop trusting the compromised eMudhra certificates, so pre-commit
