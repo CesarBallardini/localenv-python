@@ -24,7 +24,7 @@ ENV CGO_ENABLED=0 GOBIN=/scanners
 RUN go install github.com/zricethezav/gitleaks/v8@v8.30.1
 RUN go install github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.7.0
 
-FROM python:3.14.10-slim@sha256:930e1abba7c4e8f96ed93e8012c35d174d7732752731bbd5e8e757d7ec6f3966
+FROM python:3.14.10-slim@sha256:9aaa474097d094040649f2162a627c0049b408f52138d980916788d80f04802f
 
 COPY --from=uv /uv /uvx /usr/local/bin/
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
