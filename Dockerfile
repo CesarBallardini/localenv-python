@@ -13,7 +13,7 @@ FROM ghcr.io/astral-sh/uv:0.13.7@sha256:96f40d3904aad8d0bd010539001d36c8e2188b98
 # Node for pyright. Without one on PATH, pyright installs it through nodeenv, which
 # takes the newest entry in Node's index, and a 27.0.0 alpha crashes it. No wheel
 # on PyPI reaches the eMudhra floor, so pyright[nodejs] is not an option.
-FROM node:24.22.2-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c AS node
+FROM node:24.22.2-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9 AS node
 
 # The scanners `make security` runs, built here because the published binaries sit
 # below the eMudhra floor: gitleaks on Go 1.24.13 and OSV-Scanner on Go 1.27.0. Go's
