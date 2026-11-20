@@ -19,7 +19,7 @@ FROM node:24.22.2-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749
 # below the eMudhra floor: gitleaks on Go 1.24.13 and OSV-Scanner on Go 1.27.0. Go's
 # checksum database fixes what these tags resolve to. Dependabot cannot read a RUN
 # line, so a test holds both versions to security.yml and the gitleaks hook.
-FROM golang:1.27.3-alpine@sha256:d200d2dd76b03a99b52651fd1325aff7dcd35422c35c01bac56571b0507f3deb AS scanners
+FROM golang:1.27.4-alpine@sha256:70bd7ddea8b6cbe5d6943cde279d6b67feb10cc924fb9100d1d8757c1575b280 AS scanners
 ENV CGO_ENABLED=0 GOBIN=/scanners
 RUN go install github.com/zricethezav/gitleaks/v8@v8.30.1
 RUN go install github.com/google/osv-scanner/v2/cmd/osv-scanner@v2.7.0
